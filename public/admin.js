@@ -1,181 +1,469 @@
-const loginView = document.querySelector("#login-view");
-const dashboardView = document.querySelector("#dashboard-view");
-const loginForm = document.querySelector("#login-form");
-const loginButton = document.querySelector("#login-button");
-const loginError = document.querySelector("#login-error");
-const dashboardError = document.querySelector("#dashboard-error");
-const adminToken = document.querySelector("#admin-token");
-const stats = document.querySelector("#stats");
-const meta = document.querySelector("#meta");
-const report = document.querySelector("#report");
-const reportBody = document.querySelector("#report-body");
-const reportEmpty = document.querySelector("#report-empty");
-const loading = document.querySelector("#loading");
-const logoutButton = document.querySelector("#logout-button");
+const loginView = document.getElementById("login-view");
+const dashboardView = document.getElementById("dashboard-view");
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const appError = document.getElementById("app-error");
+const appLoading = document.getElementById("app-loading");
+const refreshButton = document.getElementById("refresh-button");
+const logoutButton = document.getElementById("logout-button");
+const reportBody = document.getElementById("report-body");
+const reportCount = document.getElementById("report-count");
+const pageInfo = document.getElementById("page-info");
+const previousPageButton = document.getElementById("prev-page");
+const nextPageButton = document.getElementById("next-page");
+const lastUpdated = document.getElementById("last-updated");
+const unclassifiedNote = document.getElementById("unclassified-note");
+const latestActivity = document.getElementById("latest-activity");
+const printReport = document.getElementById("print-report");
 
-function showView(name) {
-  loginView.hidden = name !== "login";
-  dashboardView.hidden = name !== "dashboard";
-  loading.hidden = true;
+const filterSearch = document.getElementById("filter-search");
+const filterAnswer = document.getElementById("filter-answer");
+const filterDate = document.getElementById("filter-date");
+const filterSort = document.getElementById("filter-sort");
+const applyFiltersButton = document.getElementById("apply-filters");
+const clearFiltersButton = document.getElementById("clear-filters");
+
+const state = {
+  section: "dashboard",
+  page: 1,
+  report: null
+};
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-function setError(element, message) {
-  element.textContent = message;
+function setMessage(node, message) {
+  node.textContent = message;
+  node.hidden = !message;
+}
+
+function setLoading(loading) {
+  appLoading.hidden = !loading;
+  refreshButton.disabled = loading;
+  refreshButton.textContent = loading ? "Refreshing…" : "Refresh Data";
 }
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
     credentials: "same-origin",
-    cache: "no-store",
-    ...options
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers ?? {})
+    }
   });
-
-  let data = {};
-  try {
-    data = await response.json();
-  } catch {
-    data = {};
-  }
-
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.message ?? "Request failed. Please try again.");
+    const error = new Error(payload.message ?? "Request failed.");
+    error.status = response.status;
+    throw error;
   }
-  return data;
+  return payload;
 }
 
-function renderStats(data) {
-  stats.replaceChildren();
+function showLogin(message = "") {
+  dashboardView.hidden = true;
+  loginView.hidden = false;
+  setMessage(loginError, message);
+}
 
-  const cards = [
-    { label: "Total responses", value: data.total },
-    { label: "Yes", value: data.counts?.yes ?? 0 },
-    { label: "No", value: data.counts?.no ?? 0 },
-    { label: "Other", value: data.counts?.other ?? 0 }
-  ];
+function showDashboard() {
+  loginView.hidden = true;
+  dashboardView.hidden = false;
+  setSection(state.section);
+}
 
-  for (const card of cards) {
-    const item = document.createElement("div");
-    item.className = "stat";
+function setSection(section) {
+  state.section = section;
+  for (const button of document.querySelectorAll(".nav-item[data-section]")) {
+    button.classList.toggle("is-active", button.dataset.section === section);
+  }
+  for (const panel of document.querySelectorAll("[data-section-panel]")) {
+    panel.hidden = panel.dataset.sectionPanel !== section;
+  }
+}
 
-    const value = document.createElement("strong");
-    value.className = "stat__value";
-    value.textContent = String(card.value);
+function currentQuery() {
+  const params = new URLSearchParams();
+  params.set("search", filterSearch.value.trim());
+  params.set("answer", filterAnswer.value);
+  params.set("date", filterDate.value);
+  params.set("sort", filterSort.value);
+  params.set("page", String(state.page));
+  params.set("pageSize", "10");
+  return params;
+}
 
-    const label = document.createElement("span");
-    label.className = "stat__label";
-    label.textContent = card.label;
+function exportQuery(format) {
+  const params = currentQuery();
+  params.delete("page");
+  params.delete("pageSize");
+  params.set("format", format);
+  return params.toString();
+}
 
-    item.append(value, label);
-    stats.append(item);
+async function fetchReport(params) {
+  return api(`/api/results?${params.toString()}`);
+}
+
+async function fetchLatest() {
+  const params = new URLSearchParams();
+  params.set("page", "1");
+  params.set("pageSize", "4");
+  params.set("sort", "newest");
+  return fetchReport(params);
+}
+
+async function fetchAllFiltered() {
+  const params = currentQuery();
+  params.delete("page");
+  params.set("pageSize", "100");
+
+  let page = 1;
+  let totalPages = 1;
+  let latestPayload = null;
+  const responses = [];
+
+  do {
+    params.set("page", String(page));
+    latestPayload = await fetchReport(params);
+    responses.push(...latestPayload.responses);
+    totalPages = latestPayload.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return { summary: latestPayload, responses };
+}
+
+function submissionParts(value) {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return { date: "Unknown", time: "—" };
+  const dateParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Karachi",
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(new Date(timestamp)).map((part) => [part.type, part.value])
+  );
+  return {
+    date: `${dateParts.day} ${dateParts.month} ${dateParts.year}`,
+    time: `${dateParts.hour}:${dateParts.minute}`
+  };
+}
+
+function percent(count, total) {
+  if (!total) return 0;
+  return Math.round((count / total) * 1000) / 10;
+}
+
+function answerText(answer) {
+  if (answer === "yes") return "YES";
+  if (answer === "no") return "NO";
+  return "—";
+}
+
+function renderChart(root, report) {
+  const yesPercent = percent(report.counts.yes, report.total);
+  const noPercent = percent(report.counts.no, report.total);
+  root.replaceChildren();
+
+  const donut = element("div", "donut");
+  donut.style.setProperty("--yes-stop", `${yesPercent}%`);
+  donut.style.setProperty("--no-stop", `${yesPercent + noPercent}%`);
+  donut.setAttribute("role", "img");
+  donut.setAttribute("aria-label", `${report.total} total responses. YES ${report.counts.yes}, ${yesPercent} percent. NO ${report.counts.no}, ${noPercent} percent.`);
+
+  const center = element("div", "donut__center");
+  center.append(element("strong", "", String(report.total)), element("span", "", "Total responses"));
+  donut.append(center);
+
+  const legend = element("div", "legend");
+  for (const [label, count, value, modifier] of [
+    ["YES", report.counts.yes, yesPercent, ""],
+    ["NO", report.counts.no, noPercent, "legend__swatch--no"]
+  ]) {
+    const item = element("div", "legend__item");
+    const swatch = element("span", `legend__swatch ${modifier}`.trim());
+    swatch.setAttribute("aria-hidden", "true");
+    const details = element("div");
+    details.append(
+      element("span", "legend__label", label),
+      element("span", "legend__value", `${count} response${count === 1 ? "" : "s"} · ${value.toFixed(1)}%`)
+    );
+    item.append(swatch, details);
+    legend.append(item);
   }
 
-  const parts = [];
-  if (data.firstSubmittedAt) parts.push(`First: ${formatDate(data.firstSubmittedAt)}`);
-  if (data.lastSubmittedAt) parts.push(`Last: ${formatDate(data.lastSubmittedAt)}`);
-  parts.push(`Updated: ${formatDate(data.generatedAt)}`);
-  meta.textContent = parts.join(" · ");
+  root.append(donut, legend);
 }
 
-function createCell(text, className) {
-  const cell = document.createElement("td");
-  cell.textContent = text;
-  if (className) cell.className = className;
-  return cell;
+function renderStats(report) {
+  const yesPercent = percent(report.counts.yes, report.total);
+  const noPercent = percent(report.counts.no, report.total);
+  for (const node of document.querySelectorAll("[data-stat]")) {
+    const key = node.dataset.stat;
+    if (key === "total") node.textContent = String(report.total);
+    if (key === "yes") node.textContent = String(report.counts.yes);
+    if (key === "no") node.textContent = String(report.counts.no);
+    if (key === "yes-percent") node.textContent = `${yesPercent.toFixed(1)}% of total`;
+    if (key === "no-percent") node.textContent = `${noPercent.toFixed(1)}% of total`;
+  }
+
+  for (const chart of document.querySelectorAll("[data-chart]")) renderChart(chart, report);
+  lastUpdated.textContent = `Updated ${submissionParts(report.generatedAt).date}, ${submissionParts(report.generatedAt).time}`;
+  unclassifiedNote.hidden = !report.unclassified;
+  if (report.unclassified) {
+    unclassifiedNote.textContent = `${report.unclassified} older record${report.unclassified === 1 ? "" : "s"} without a valid response were preserved unchanged and are excluded from YES and NO counts.`;
+  }
 }
 
-function renderReport(data) {
-  const responses = data.responses ?? [];
+function renderLatest(report) {
+  latestActivity.replaceChildren();
+  if (!report.responses.length) {
+    latestActivity.append(element("p", "table-empty", "No submissions yet."));
+    return;
+  }
+
+  for (const response of report.responses) {
+    const row = element("div", "latest-item");
+    const details = element("div");
+    const time = submissionParts(response.submittedAt);
+    details.append(
+      element("span", "latest-item__name", response.name || "Not provided"),
+      element("span", "latest-item__time", `${time.date} · ${time.time}`)
+    );
+    const answer = element("span", `answer answer--${response.answer === "yes" || response.answer === "no" ? response.answer : "unknown"}`, answerText(response.answer));
+    row.append(details, answer);
+    latestActivity.append(row);
+  }
+}
+
+function renderTable(report) {
   reportBody.replaceChildren();
-  report.hidden = responses.length === 0;
-  reportEmpty.hidden = responses.length !== 0;
+  if (!report.responses.length) {
+    const row = element("tr");
+    const cell = element("td", "table-empty", "No responses match the selected filters.");
+    cell.colSpan = 4;
+    row.append(cell);
+    reportBody.append(row);
+  }
 
-  for (const item of responses) {
-    const row = document.createElement("tr");
-    const answer = String(item.answer);
-    const answerKey = ["yes", "no", "other"].includes(answer) ? answer : "other";
-    const answerCell = createCell("");
-    const badge = document.createElement("span");
-    badge.className = `report__answer report__answer--${answerKey}`;
-    badge.textContent = answer.toUpperCase() || "UNKNOWN";
-    answerCell.append(badge);
-
+  for (const response of report.responses) {
+    const row = element("tr");
+    const time = submissionParts(response.submittedAt);
+    const answerClass = response.answer === "yes" || response.answer === "no" ? response.answer : "unknown";
     row.append(
-      createCell(item.name || "Not provided", "report__name"),
-      answerCell,
-      createCell(item.submittedAt ? formatDate(item.submittedAt) : "Unknown", "report__date")
+      element("td", "", response.name || "Not provided"),
+      (() => {
+        const cell = element("td");
+        cell.append(element("span", `answer answer--${answerClass}`, answerText(response.answer)));
+        return cell;
+      })(),
+      element("td", "", time.date),
+      element("td", "", time.time)
     );
     reportBody.append(row);
   }
+
+  reportCount.textContent = `${report.filteredTotal} record${report.filteredTotal === 1 ? "" : "s"}`;
+  pageInfo.textContent = `Page ${report.page} of ${report.totalPages}`;
+  previousPageButton.disabled = report.page <= 1;
+  nextPageButton.disabled = report.page >= report.totalPages;
 }
 
-function formatDate(value) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
-}
-
-async function loadDashboard() {
-  const data = await api("/api/results");
-  renderStats(data);
-  renderReport(data);
-  setError(dashboardError, "");
-  showView("dashboard");
-}
-
-async function refresh() {
-  loading.hidden = false;
-  setError(loginError, "");
-  setError(dashboardError, "");
-
+async function loadReport() {
+  setLoading(true);
+  setMessage(appError, "");
   try {
-    const session = await api("/api/admin/session");
-    if (session.authenticated) {
-      await loadDashboard();
-      return;
-    }
-    showView("login");
+    const [report, latest] = await Promise.all([fetchReport(currentQuery()), fetchLatest()]);
+    state.report = report;
+    state.page = report.page;
+    renderStats(report);
+    renderLatest(latest);
+    renderTable(report);
   } catch (error) {
-    setError(loginError, error.message);
-    showView("login");
+    setMessage(appError, error.message || "Could not load dashboard data.");
+  } finally {
+    setLoading(false);
+  }
+}
+
+function applyFilters() {
+  state.page = 1;
+  loadReport();
+}
+
+function buildPrintSheet(report, responses) {
+  printReport.replaceChildren();
+
+  const header = element("header", "print-header");
+  header.append(
+    element("h1", "", "Shams-ur-Rehman · Survey Report"),
+    element("p", "", `Ward 07 – Kashrote Yadgaar · Generated ${submissionParts(report.generatedAt).date}, ${submissionParts(report.generatedAt).time}`)
+  );
+
+  const summary = element("div", "print-summary");
+  const yesPercent = percent(report.counts.yes, report.total);
+  const noPercent = percent(report.counts.no, report.total);
+  for (const [label, value, hint] of [
+    ["Total responses", report.total, "Recorded in the database"],
+    ["YES responses", report.counts.yes, `${yesPercent.toFixed(1)}% of total`],
+    ["NO responses", report.counts.no, `${noPercent.toFixed(1)}% of total`]
+  ]) {
+    const card = element("div");
+    card.append(element("span", "", label), element("strong", "", String(value)), element("span", "", hint));
+    summary.append(card);
+  }
+
+  const chart = element("div", "print-chart chart-layout");
+  renderChart(chart, report);
+
+  const table = element("table");
+  const thead = element("thead");
+  const headRow = element("tr");
+  for (const label of ["Respondent Name", "Response", "Submission Date", "Submission Time"]) {
+    headRow.append(element("th", "", label));
+  }
+  thead.append(headRow);
+
+  const tbody = element("tbody");
+  if (!responses.length) {
+    const row = element("tr");
+    const cell = element("td", "table-empty", "No responses match the selected filters.");
+    cell.colSpan = 4;
+    row.append(cell);
+    tbody.append(row);
+  }
+  for (const response of responses) {
+    const row = element("tr");
+    const time = submissionParts(response.submittedAt);
+    row.append(
+      element("td", "", response.name || "Not provided"),
+      element("td", "", answerText(response.answer)),
+      element("td", "", time.date),
+      element("td", "", time.time)
+    );
+    tbody.append(row);
+  }
+  table.append(thead, tbody);
+
+  printReport.append(header, summary, chart, table, element("p", "print-footer", "Confidential · Authorized administrators only · Responses show public support, not verified election votes."));
+}
+
+async function preparePrint() {
+  setLoading(true);
+  try {
+    const { summary, responses } = await fetchAllFiltered();
+    buildPrintSheet(summary, responses);
+    printReport.hidden = false;
+    const cleanup = () => {
+      printReport.hidden = true;
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    window.setTimeout(cleanup, 60000);
+  } catch (error) {
+    setMessage(appError, error.message || "Could not prepare the print report.");
+  } finally {
+    setLoading(false);
   }
 }
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (loginButton.disabled) return;
-
-  if (!adminToken.value) {
-    setError(loginError, "Enter the admin token.");
-    return;
-  }
-
-  loginButton.disabled = true;
-  setError(loginError, "");
+  setMessage(loginError, "");
+  const token = document.getElementById("admin-token").value.trim();
+  if (!token) return;
 
   try {
     await api("/api/admin/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: adminToken.value })
+      body: JSON.stringify({ token })
     });
-    adminToken.value = "";
-    await refresh();
+    document.getElementById("admin-token").value = "";
+    showDashboard();
+    loadReport();
   } catch (error) {
-    setError(loginError, error.message);
-  } finally {
-    loginButton.disabled = false;
+    setMessage(loginError, error.message || "Sign in failed.");
   }
 });
 
 logoutButton.addEventListener("click", async () => {
-  logoutButton.disabled = true;
   try {
     await api("/api/admin/logout", { method: "POST" });
-    await refresh();
-  } catch (error) {
-    setError(dashboardError, error.message);
-  } finally {
-    logoutButton.disabled = false;
+  } catch {
+    setMessage(appError, "Could not end the admin session.");
+  }
+  showLogin();
+});
+
+for (const button of document.querySelectorAll(".nav-item[data-section]")) {
+  button.addEventListener("click", () => setSection(button.dataset.section));
+}
+
+refreshButton.addEventListener("click", loadReport);
+applyFiltersButton.addEventListener("click", applyFilters);
+clearFiltersButton.addEventListener("click", () => {
+  filterSearch.value = "";
+  filterAnswer.value = "";
+  filterDate.value = "";
+  filterSort.value = "newest";
+  applyFilters();
+});
+
+previousPageButton.addEventListener("click", () => {
+  if (state.page > 1) {
+    state.page -= 1;
+    loadReport();
   }
 });
 
-refresh();
+nextPageButton.addEventListener("click", () => {
+  const totalPages = state.report?.totalPages ?? 1;
+  if (state.page < totalPages) {
+    state.page += 1;
+    loadReport();
+  }
+});
+
+document.getElementById("download-pdf").addEventListener("click", () => {
+  window.location.href = `/api/results/export?${exportQuery("pdf")}`;
+});
+
+document.getElementById("download-csv").addEventListener("click", () => {
+  window.location.href = `/api/results/export?${exportQuery("csv")}`;
+});
+
+document.getElementById("print-report-button").addEventListener("click", preparePrint);
+
+filterSearch.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    applyFilters();
+  }
+});
+
+async function initialize() {
+  try {
+    const session = await api("/api/admin/session");
+    if (!session.authenticated) {
+      showLogin();
+      return;
+    }
+    showDashboard();
+    loadReport();
+  } catch {
+    showLogin();
+  }
+}
+
+initialize();

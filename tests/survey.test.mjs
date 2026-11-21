@@ -188,7 +188,7 @@ test("validates the name and response", async () => {
 
   const invalidAnswer = await postResponse(
     origin,
-    { name: "Ali Khan", answer: "other", token: visitor.token, website: "" },
+    { name: "Ali Khan", answer: "maybe", token: visitor.token, website: "" },
     ip,
     { Cookie: visitor.cookie }
   );

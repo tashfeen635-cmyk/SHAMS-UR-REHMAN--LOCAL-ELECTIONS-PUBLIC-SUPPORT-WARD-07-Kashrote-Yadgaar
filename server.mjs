@@ -7,6 +7,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createStateStore } from "./lib/state.mjs";
 import { createDeviceStore } from "./lib/device-store.mjs";
+import { buildCsv, buildNdjson, buildReport, parseReportQuery, selectReportRecords } from "./lib/report.mjs";
+import { buildPdfReport } from "./lib/pdf-report.mjs";
 
 const rootDir = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const publicDir = join(rootDir, "public");
@@ -52,7 +54,7 @@ const devices = createDeviceStore({
 
 const deviceRecords = new Map();
 for (const record of await readResponses()) {
-  if (typeof record.deviceHash === "string") {
+  if (typeof record.deviceHash === "string" && (record.answer === "yes" || record.answer === "no")) {
     deviceRecords.set(record.deviceHash, record.answer);
   }
 }
@@ -581,14 +583,13 @@ async function readResponses() {
     if (!line.trim()) continue;
     try {
       const record = JSON.parse(line);
-      if (!record || typeof record !== "object" || !["yes", "no", "other"].includes(record.answer)) {
-        continue;
-      }
+      if (!record || typeof record !== "object" || Array.isArray(record)) continue;
 
       records.push({
         ...record,
         id: typeof record.id === "string" ? record.id : "",
         name: firstStringField(record, ["name", "voterName", "respondentName", "fullName", "submittedBy"]),
+        answer: typeof record.answer === "string" ? record.answer : "",
         submittedAt: typeof record.submittedAt === "string" ? record.submittedAt : ""
       });
     } catch {
@@ -613,80 +614,50 @@ async function requireAdmin(req, res) {
 async function handleResults(req, res) {
   if (!await requireAdmin(req, res)) return;
 
-  const records = await readResponses();
-  const counts = { yes: 0, no: 0, other: 0 };
-  let firstSubmittedAt = null;
-  let lastSubmittedAt = null;
+  const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+  const query = parseReportQuery(url.searchParams);
+  const report = buildReport(await readResponses(), query);
+  const { filteredRecords, ...payload } = report;
 
-  for (const record of records) {
-    counts[record.answer] += 1;
-
-    const value = record.submittedAt;
-    if (typeof value === "string" && Number.isFinite(Date.parse(value))) {
-      if (!firstSubmittedAt || value < firstSubmittedAt) firstSubmittedAt = value;
-      if (!lastSubmittedAt || value > lastSubmittedAt) lastSubmittedAt = value;
-    }
-  }
-
-  const responses = records
-    .map((record) => ({
-      id: record.id,
-      name: record.name || "Not provided",
-      answer: record.answer,
-      submittedAt: record.submittedAt
-    }))
-    .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt));
-
-  return json(res, 200, {
-    total: records.length,
-    counts,
-    responses,
-    firstSubmittedAt,
-    lastSubmittedAt,
-    generatedAt: new Date().toISOString()
-  });
-}
-
-function csvCell(value) {
-  let cell = String(value ?? "");
-  if (/^[=+\-@\t\r]/.test(cell)) cell = `'${cell}`;
-  return `"${cell.replace(/"/g, '""')}"`;
+  return json(res, 200, payload);
 }
 
 async function handleResultsExport(req, res) {
   if (!await requireAdmin(req, res)) return;
 
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+  const query = parseReportQuery(url.searchParams);
   const format = url.searchParams.get("format") ?? "csv";
   const records = await readResponses();
+  const exportedRecords = selectReportRecords(records, query);
+
+  if (format === "pdf") {
+    const report = buildReport(records, query);
+    return download(
+      res,
+      200,
+      "application/pdf",
+      buildPdfReport(report),
+      "shams-survey-report.pdf"
+    );
+  }
 
   if (format === "json" || format === "ndjson") {
-    const body = records.map((record) => JSON.stringify(record)).join("\n") + (records.length ? "\n" : "");
     return download(
       res,
       200,
       "application/x-ndjson; charset=utf-8",
-      body,
+      buildNdjson(exportedRecords),
       "shams-responses.ndjson"
     );
   }
 
-  const rows = [["id", "name", "answer", "deviceHash", "submittedAt"].map(csvCell).join(",")];
-  for (const record of records) {
-    rows.push([
-      record.id,
-      record.name,
-      record.answer,
-      record.deviceHash ?? "",
-      record.submittedAt
-    ].map(csvCell).join(","));
-  }
   return download(
     res,
     200,
     "text/csv; charset=utf-8",
-    `${rows.join("\r\n")}\r\n`,
-    "shams-responses.csv"
+    buildCsv(exportedRecords),
+    "shams-survey-report.csv"
   );
 }
 

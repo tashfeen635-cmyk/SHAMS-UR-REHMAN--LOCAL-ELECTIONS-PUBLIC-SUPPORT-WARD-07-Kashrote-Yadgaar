@@ -1,67 +1,254 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0b3d30">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Survey Results | Shams-ur-Rehman</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/admin.css">
-  </head>
-  <body>
-    <main class="admin-viewport">
-      <section class="admin-card" aria-labelledby="admin-title">
-        <header class="admin-header">
-          <div>
-            <p class="admin-kicker">WARD 7 – Kashrote Yadgaar</p>
-            <h1 id="admin-title">Survey results</h1>
-            <p class="admin-subtitle">Shams-ur-Rehman · Public support survey</p>
-          </div>
-          <a class="admin-link" href="/">VIEW SURVEY</a>
-        </header>
-
-        <div class="admin-view" id="login-view" hidden>
-          <form class="admin-form" id="login-form" novalidate>
-            <label class="admin-label" for="admin-token">Admin token</label>
-            <input class="admin-input" id="admin-token" name="token" type="password" autocomplete="current-password" required>
-            <button class="admin-button" id="login-button" type="submit">SIGN IN</button>
-            <p class="admin-error" id="login-error" role="alert"></p>
-          </form>
-        </div>
-
-        <div class="admin-view" id="dashboard-view" hidden>
-          <p class="admin-error" id="dashboard-error" role="alert"></p>
-          <div class="stats" id="stats"></div>
-          <p class="admin-meta" id="meta"></p>
-          <div class="report" id="report" hidden>
-            <h2 class="report__title">Survey report</h2>
-            <p class="report__empty" id="report-empty" hidden>No responses yet.</p>
-            <div class="report__scroll">
-              <table class="report__table">
-                <thead>
-                  <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Response</th>
-                    <th scope="col">Submitted</th>
-                  </tr>
-                </thead>
-                <tbody id="report-body"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="admin-actions">
-            <a class="admin-button" href="/api/results/export?format=csv" download>DOWNLOAD CSV</a>
-            <a class="admin-button admin-button--secondary" href="/api/results/export?format=ndjson" download>DOWNLOAD NDJSON</a>
-            <button class="admin-button admin-button--ghost" id="logout-button" type="button">SIGN OUT</button>
-          </div>
-        </div>
-
-        <p class="admin-loading" id="loading">Loading…</p>
-      </section>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Survey Dashboard · Shams-ur-Rehman</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <div id="login-view" class="auth-shell">
+    <main class="auth-card">
+      <p class="eyebrow">Campaign Administration</p>
+      <h1>Admin Access</h1>
+      <p class="auth-card__intro">Sign in to manage Ward 07 survey responses.</p>
+      <form id="login-form">
+        <label for="admin-token">Admin token</label>
+        <input id="admin-token" name="token" type="password" autocomplete="current-password" required>
+        <button class="button button--primary" type="submit">Sign In</button>
+      </form>
+      <p id="login-error" class="message message--error" role="alert" hidden></p>
     </main>
+  </div>
 
-    <script src="/admin.js" defer></script>
-  </body>
+  <div id="dashboard-view" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand__mark">SR</span>
+        <div>
+          <strong>Shams-ur-Rehman</strong>
+          <span>Survey Admin</span>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Admin navigation">
+        <button type="button" class="nav-item is-active" data-section="dashboard">Dashboard</button>
+        <button type="button" class="nav-item" data-section="reports">Survey Reports</button>
+        <button type="button" class="nav-item" data-section="analytics">Analytics</button>
+        <button type="button" class="nav-item" data-section="downloads">Download Reports</button>
+        <button type="button" class="nav-item nav-item--logout" id="logout-button">Sign Out</button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>Admin session</strong>
+          <span>Authorized access only</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Survey Management Dashboard</p>
+          <h1>Ward 07 – Kashrote Yadgaar</h1>
+          <p>Shams-ur-Rehman · Public Support Survey</p>
+        </div>
+        <div class="topbar__actions">
+          <button type="button" class="button button--secondary" id="refresh-button">Refresh Data</button>
+          <a class="button button--ghost" href="/">View Survey</a>
+        </div>
+      </header>
+
+      <div id="app-error" class="message message--error" role="alert" hidden></div>
+      <div id="app-loading" class="loading" role="status" hidden>Loading latest data…</div>
+
+      <section id="section-dashboard" class="section" data-section-panel="dashboard">
+        <div class="section-heading">
+          <div>
+            <h2>Dashboard Overview</h2>
+            <p>Live snapshot of responses stored in the survey database.</p>
+          </div>
+          <span class="pill" id="last-updated">Not loaded</span>
+        </div>
+
+        <div class="stat-grid">
+          <article class="stat-card stat-card--total">
+            <span class="stat-card__label">Total Responses</span>
+            <strong data-stat="total">0</strong>
+            <span class="stat-card__hint">Recorded responses</span>
+          </article>
+          <article class="stat-card stat-card--yes">
+            <span class="stat-card__label">Yes Responses</span>
+            <strong data-stat="yes">0</strong>
+            <span class="stat-card__hint" data-stat="yes-percent">0% of total</span>
+          </article>
+          <article class="stat-card stat-card--no">
+            <span class="stat-card__label">No Responses</span>
+            <strong data-stat="no">0</strong>
+            <span class="stat-card__hint" data-stat="no-percent">0% of total</span>
+          </article>
+        </div>
+
+        <div class="panel-row">
+          <article class="panel">
+            <div class="panel__head">
+              <h3>Response Distribution</h3>
+              <p>Share of YES and NO responses</p>
+            </div>
+            <div class="chart-layout" data-chart="dashboard"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel__head">
+              <h3>Latest Activity</h3>
+              <p>Most recent submissions</p>
+            </div>
+            <div id="latest-activity" class="latest-list"></div>
+          </article>
+        </div>
+
+        <p id="unclassified-note" class="notice" hidden></p>
+      </section>
+
+      <section id="section-reports" class="section" data-section-panel="reports" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Survey Reports</h2>
+            <p>Find and review individual survey responses.</p>
+          </div>
+        </div>
+
+        <div class="panel filters">
+          <div class="field">
+            <label for="filter-search">Search respondent</label>
+            <input id="filter-search" type="search" placeholder="Name" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="filter-answer">Response</label>
+            <select id="filter-answer">
+              <option value="">All responses</option>
+              <option value="yes">YES</option>
+              <option value="no">NO</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filter-date">Submission date</label>
+            <input id="filter-date" type="date">
+          </div>
+          <div class="field">
+            <label for="filter-sort">Sort by</label>
+            <select id="filter-sort">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
+          <div class="filters__actions">
+            <button type="button" class="button button--primary" id="apply-filters">Apply Filters</button>
+            <button type="button" class="button button--ghost" id="clear-filters">Clear</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-toolbar">
+            <h3>Survey Responses</h3>
+            <span class="pill" id="report-count">0 records</span>
+          </div>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th scope="col">Respondent Name</th>
+                  <th scope="col">Response</th>
+                  <th scope="col">Submission Date</th>
+                  <th scope="col">Submission Time</th>
+                </tr>
+              </thead>
+              <tbody id="report-body">
+                <tr><td colspan="4" class="table-empty">No data loaded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button type="button" class="button button--secondary" id="prev-page">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button type="button" class="button button--secondary" id="next-page">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-analytics" class="section" data-section-panel="analytics" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Analytics</h2>
+            <p>Simple totals that update from the live database.</p>
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <article class="panel">
+            <div class="panel__head">
+              <h3>Response Distribution</h3>
+              <p>Exact counts and percentages</p>
+            </div>
+            <div class="chart-layout" data-chart="analytics"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel__head">
+              <h3>How These Numbers Work</h3>
+              <p>Read this before sharing a report.</p>
+            </div>
+            <ul class="method-list">
+              <li>Only YES and NO are valid survey responses.</li>
+              <li>Counts come directly from stored database records.</li>
+              <li>Percentages are calculated from the total response count.</li>
+              <li>Responses show public support only, not verified election votes.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="section-downloads" class="section" data-section-panel="downloads" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Download Reports</h2>
+            <p>Export the current report filters in the format you need.</p>
+          </div>
+        </div>
+
+        <div class="panel download-panel">
+          <div class="download-card">
+            <div>
+              <h3>PDF Report</h3>
+              <p>Formatted summary with chart, table, and page numbers.</p>
+            </div>
+            <button type="button" class="button button--primary" id="download-pdf">Download PDF</button>
+          </div>
+          <div class="download-card">
+            <div>
+              <h3>CSV Report</h3>
+              <p>Opens in Microsoft Excel with dates and times separated.</p>
+            </div>
+            <button type="button" class="button button--secondary" id="download-csv">Download CSV</button>
+          </div>
+          <div class="download-card">
+            <div>
+              <h3>Print Report</h3>
+              <p>Opens a clean report for printing or saving as PDF.</p>
+            </div>
+            <button type="button" class="button button--secondary" id="print-report-button">Print Report</button>
+          </div>
+          <p class="notice">Downloads use the filters selected in Survey Reports.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="print-report" class="print-report" hidden></div>
+  <script src="/admin.js" defer></script>
+</body>
 </html>
