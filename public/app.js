@@ -15,12 +15,19 @@ let surveyToken = tokenMeta?.content ?? "";
 const ALREADY_MESSAGE = "You have already submitted your response from this device.";
 const THANKS_TITLE = "Thank you for participating!";
 const MAX_NAME_LENGTH = 80;
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{32}$/;
 
 let phase = "checking";
 let submittedAnswer = null;
 
 function selectedAnswer() {
   return radios.find((radio) => radio.checked)?.value ?? null;
+}
+
+function acceptToken(value) {
+  if (typeof value !== "string" || !TOKEN_PATTERN.test(value)) return false;
+  surveyToken = value;
+  return true;
 }
 
 async function ensureSurveyToken() {
@@ -33,10 +40,7 @@ async function ensureSurveyToken() {
       headers: { Accept: "application/json" }
     });
     if (!response.ok) return;
-    const data = await response.json();
-    if (typeof data.token === "string" && /^[A-Za-z0-9_-]{32}$/.test(data.token)) {
-      surveyToken = data.token;
-    }
+    await acceptToken((await response.json()).token);
   } catch {
     surveyToken = "";
   }
@@ -121,6 +125,7 @@ async function checkStatus() {
     }
 
     const data = await response.json();
+    acceptToken(data.token);
     if (data.submitted) {
       showAlreadySubmitted(data.answer);
       return;
@@ -169,6 +174,9 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (!surveyToken || surveyToken === "__SURVEY_TOKEN__") {
+    await ensureSurveyToken();
+  }
   if (!surveyToken || surveyToken === "__SURVEY_TOKEN__") {
     setStatus("Your survey session has expired. Please reload the page.", "error");
     return;
@@ -222,4 +230,4 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-ensureSurveyToken().then(checkStatus);
+checkStatus();

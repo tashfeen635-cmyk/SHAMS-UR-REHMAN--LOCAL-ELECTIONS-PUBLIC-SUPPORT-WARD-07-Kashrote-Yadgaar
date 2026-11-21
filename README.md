@@ -12,7 +12,7 @@ Anonymous public support survey for Shams-ur-Rehman, Ward 7 – Kashrote Yadgaar
 - Replaceable candidate photo and election symbol placeholders in `public/assets/`
 - Admin dashboard at `/admin` with totals, a per-respondent report, date range, and CSV/NDJSON downloads
 - Security headers, strict CSP, responsive layout, reduced-motion support
-- 23 automated tests covering the API, device dedupe, validation, persistence, and frontend logic
+- 24 automated tests covering the API, device dedupe, validation, persistence, and frontend logic
 
 ## Quick start
 
@@ -84,7 +84,7 @@ Visit `/admin`, enter `ADMIN_TOKEN`, and sign in. Admin cookies are `HttpOnly`, 
 | --- | --- | --- |
 | `GET` | `/api/health` | Health check |
 | `GET` | `/api/survey/session` | Creates a survey session token for statically hosted pages (sets the device cookie) |
-| `GET` | `/api/survey/status` | Returns `{ submitted, answer }` for the current browser cookie (sets it if missing) |
+| `GET` | `/api/survey/status` | Returns `{ submitted, answer, token }` for the current browser cookie (sets it if missing) |
 | `POST` | `/api/responses` | Submit `{ name, answer, token, website, comment }` with the device cookie; `name` is required and `answer` is `yes` or `no` |
 | `POST` | `/api/admin/login` | Submit `{ token }`, sets admin cookie |
 | `GET` | `/api/admin/session` | Returns `{ authenticated }` |
@@ -121,7 +121,7 @@ Vercel + MongoDB Atlas:
    - `DEVICE_SECRET` — a long random permanent secret (generate with `openssl rand -hex 32`)
    - `ADMIN_TOKEN` — a separate long random admin secret
    - `TRUST_PROXY=1`
-5. Deploy. `api/` serverless functions store responses, sessions, rate limits, and admin sessions in MongoDB; `dist/` serves the public page and admin page. The frontend requests `/api/survey/session` when the static HTML has no injected token.
+5. Deploy. `api/` serverless functions store responses, sessions, rate limits, and admin sessions in MongoDB; `dist/` serves the public page and admin page. The frontend gets its session token from `/api/survey/status`, with `/api/survey/session` as a fallback.
 6. Do not change `DEVICE_SECRET` after launch unless you want every existing browser device token to become invalid.
 7. Before deploying, you can place the same values in a local `.env` and run `npm run env:check` to verify Atlas connectivity without printing secrets.
 

@@ -36,7 +36,7 @@ const MAX_BODY_BYTES = 4096;
 const MAX_NAME_LENGTH = 80;
 const MAX_COMMENT_LENGTH = 240;
 const RATE_LIMITS = {
-  session: { windowMs: 10 * 60 * 1000, max: 30 },
+  session: { windowMs: 10 * 60 * 1000, max: 120 },
   submission: { windowMs: 10 * 60 * 1000, max: 5 },
   adminLogin: { windowMs: 10 * 60 * 1000, max: 5 }
 };
@@ -290,12 +290,14 @@ async function handleSurveyStatus(req, res) {
     return json(res, 405, { message: "Method not allowed." });
   }
 
-  const token = ensureDevice(req, res);
-  const hash = devices.hashToken(token);
+  const deviceToken = ensureDevice(req, res);
+  const hash = devices.hashToken(deviceToken);
+  const session = await createSession(req);
 
   return json(res, 200, {
     submitted: devices.hasSubmitted(hash),
-    answer: deviceRecords.get(hash) ?? null
+    answer: deviceRecords.get(hash) ?? null,
+    ...(session.token ? { token: session.token } : {})
   });
 }
 

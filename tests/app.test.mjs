@@ -280,6 +280,21 @@ test("recovers from network failures and shows an error", async () => {
   assert.equal(dom.status.attributes.role, "alert");
 });
 
+test("uses the token returned by the status endpoint", async () => {
+  const token = "b".repeat(32);
+  const dom = await createDom({
+    token: "__SURVEY_TOKEN__",
+    status: { submitted: false, answer: null, token }
+  });
+  await dom.enterName("Ali Khan");
+  await dom.select(dom.yes);
+  await dom.submit();
+
+  const post = dom.calls.find((call) => call.url === "/api/responses");
+  assert.equal(JSON.parse(post.init.body).token, token);
+  assert.equal(dom.calls.filter((call) => call.url === "/api/survey/session").length, 0);
+});
+
 test("loads a session token when the page is served statically", async () => {
   const token = "a".repeat(32);
   const dom = await createDom({
