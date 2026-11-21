@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#06291f">
+    <meta name="description" content="Voluntary public support survey for Shams-ur-Rehman, Ward 07 – Kashrote Yadgaar.">
+    <meta name="survey-token" content="__SURVEY_TOKEN__">
+    <title>Shams-ur-Rehman | Ward 07 – Kashrote Yadgaar</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="viewport">
+      <section class="hero" aria-labelledby="candidate-name">
+        <div class="hero__ribbon" aria-hidden="true"></div>
+
+        <div class="candidate-panel">
+          <header class="brand">
+            <div class="brand__badge" aria-hidden="true">
+              <span>07</span>
+            </div>
+            <div class="brand__copy">
+              <p class="eyebrow">LOCAL ELECTIONS &middot; PUBLIC SUPPORT</p>
+              <p class="brand__constituency">WARD <strong>07</strong> &ndash; Kashrote Yadgaar</p>
+              <p class="urdu brand__urdu" lang="ur" dir="rtl">یادگارکشروٹ</p>
+            </div>
+          </header>
+
+          <div class="candidate-main">
+            <figure class="portrait">
+              <img class="portrait__image" src="/assets/candidate-photo.jpg" width="800" height="800" alt="Portrait of Shams-ur-Rehman with the Pakistan Monument">
+              <figcaption class="visually-hidden">Candidate photograph. Replace /assets/candidate-photo.jpg to update the portrait.</figcaption>
+            </figure>
+
+            <div class="candidate-copy">
+              <p class="candidate-copy__kicker">YOUR CANDIDATE</p>
+              <h1 id="candidate-name">SHAMS-UR-REHMAN</h1>
+              <p class="urdu candidate-copy__urdu" lang="ur" dir="rtl">شمس الرحمٰن</p>
+              <div class="accent-rule" aria-hidden="true"></div>
+              <p class="candidate-copy__text">A voluntary public support survey for the upcoming local elections. Your opinion matters.</p>
+
+              <dl class="facts">
+                <div class="facts__item">
+                  <dt>ELECTION AREA</dt>
+                  <dd>WARD 07 &ndash; Kashrote Yadgaar</dd>
+                </div>
+                <div class="facts__item">
+                  <dt>INITIATIVE</dt>
+                  <dd>PUBLIC SUPPORT SURVEY</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="campaign-strip">
+            <div class="seal" aria-label="Election area number 07">
+              <span class="seal__top">ward NO.</span>
+              <strong class="seal__number">07</strong>
+              <span class="seal__bottom">Kashrote Yadgaar</span>
+            </div>
+
+            <div class="symbol">
+              <img class="symbol__image" src="/assets/election-symbol.jpg" width="500" height="305" alt="Election symbol for Shams-ur-Rehman">
+              <span class="symbol__label">ELECTION SYMBOL</span>
+            </div>
+
+            <p class="urdu campaign-strip__note" lang="ur" dir="rtl">
+              <span class="campaign-strip__line"></span>
+              میرا شیر، میری ذمہ داری۔
+              <span class="campaign-strip__line"></span>
+            </p>
+          </div>
+        </div>
+
+        <div class="survey-panel">
+          <div class="survey-head">
+            <p class="eyebrow eyebrow--green">VOLUNTARY PUBLIC SUPPORT SURVEY</p>
+            <h2>Do you support <span>Shams-ur-Rehman?</span></h2>
+            <p class="urdu survey-head__urdu" lang="ur" dir="rtl">عوامی حمایت کا سروے</p>
+          </div>
+
+          <form class="survey-form" id="survey-form" novalidate>
+            <div class="form-field">
+              <label class="form-field__label" for="voter-name">Your name <span aria-hidden="true">*</span></label>
+              <input class="form-field__input" id="voter-name" name="name" type="text" maxlength="80" autocomplete="name" placeholder="Enter your name" required>
+            </div>
+
+            <fieldset class="question">
+              <legend class="question__title">Your choice</legend>
+
+              <div class="options">
+                <label class="option option--yes" id="option-yes">
+                  <input type="radio" name="answer" value="yes" id="answer-yes">
+                  <span class="option__indicator" aria-hidden="true"></span>
+                  <span class="option__title">YES, I SUPPORT</span>
+                </label>
+
+                <label class="option option--no" id="option-no">
+                  <input type="radio" name="answer" value="no" id="answer-no">
+                  <span class="option__indicator" aria-hidden="true"></span>
+                  <span class="option__title">NO, I DO NOT SUPPORT</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="form-field form-field--comment">
+              <label class="form-field__label" for="comment">Review or comment <span class="optional">optional</span></label>
+              <textarea class="form-field__input form-field__textarea" id="comment" name="comment" maxlength="240" rows="2" placeholder="Add a short note (optional)"></textarea>
+            </div>
+
+            <div class="honeypot" aria-hidden="true">
+              <label for="website">Website</label>
+              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+            </div>
+
+            <p class="disclaimer" id="disclaimer">Participation is voluntary. Your response is an informal opinion and does not constitute an official election vote.</p>
+
+            <button class="submit" id="submit-button" type="submit" disabled>
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="submit__label" id="submit-label">SUBMIT RESPONSE</span>
+            </button>
+
+            <p class="status" id="status" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="success" id="success" hidden>
+            <div class="success__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m20 6-11 11-5-5"></path>
+              </svg>
+            </div>
+            <h2 class="success__title" id="success-title" tabindex="-1">Thank you for participating!</h2>
+            <p class="success__text" id="success-text">You have already submitted your response from this device.</p>
+          </div>
+
+          <footer class="credit">
+            <p>developed by tashfeen bin riaz</p>
+            <p>contact - <a href="tel:03170885816">03170885816</a></p>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

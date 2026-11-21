@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b3d30">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Survey Results | Shams-ur-Rehman</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/admin.css">
+  </head>
+  <body>
+    <main class="admin-viewport">
+      <section class="admin-card" aria-labelledby="admin-title">
+        <header class="admin-header">
+          <div>
+            <p class="admin-kicker">WARD 7 – Kashrote Yadgaar</p>
+            <h1 id="admin-title">Survey results</h1>
+            <p class="admin-subtitle">Shams-ur-Rehman · Public support survey</p>
+          </div>
+          <a class="admin-link" href="/">VIEW SURVEY</a>
+        </header>
+
+        <div class="admin-view" id="login-view" hidden>
+          <form class="admin-form" id="login-form" novalidate>
+            <label class="admin-label" for="admin-token">Admin token</label>
+            <input class="admin-input" id="admin-token" name="token" type="password" autocomplete="current-password" required>
+            <button class="admin-button" id="login-button" type="submit">SIGN IN</button>
+            <p class="admin-error" id="login-error" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="admin-view" id="dashboard-view" hidden>
+          <p class="admin-error" id="dashboard-error" role="alert"></p>
+          <div class="stats" id="stats"></div>
+          <p class="admin-meta" id="meta"></p>
+          <div class="report" id="report" hidden>
+            <h2 class="report__title">Survey report</h2>
+            <p class="report__empty" id="report-empty" hidden>No responses yet.</p>
+            <div class="report__scroll">
+              <table class="report__table">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Response</th>
+                    <th scope="col">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody id="report-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="admin-actions">
+            <a class="admin-button" href="/api/results/export?format=csv" download>DOWNLOAD CSV</a>
+            <a class="admin-button admin-button--secondary" href="/api/results/export?format=ndjson" download>DOWNLOAD NDJSON</a>
+            <button class="admin-button admin-button--ghost" id="logout-button" type="button">SIGN OUT</button>
+          </div>
+        </div>
+
+        <p class="admin-loading" id="loading">Loading…</p>
+      </section>
+    </main>
+
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

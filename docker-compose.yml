@@ -1,0 +1,18 @@
+services:
+  survey:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /app/data
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in your environment}
+      COOKIE_SECURE: "0"
+    volumes:
+      - survey-data:/app/data
+
+volumes:
+  survey-data:

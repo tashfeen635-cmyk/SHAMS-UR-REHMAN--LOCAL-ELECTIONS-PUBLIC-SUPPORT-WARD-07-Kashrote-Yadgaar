@@ -1,0 +1,16 @@
+{
+  "name": "shams-support-survey",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch scripts/dev.mjs",
+    "start": "node server.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check server.mjs && node --check lib/state.mjs && node --check lib/device-store.mjs && node --check public/app.js && node --check public/admin.js && node --check scripts/build.mjs && node --check scripts/dev.mjs"
+  }
+}

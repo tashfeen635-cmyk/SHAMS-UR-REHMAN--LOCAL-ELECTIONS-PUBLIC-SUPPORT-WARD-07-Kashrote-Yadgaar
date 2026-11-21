@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" role="img" aria-labelledby="title desc">
+  <title id="title">Candidate photograph placeholder</title>
+  <desc id="desc">Replace this file with the official portrait of Shams-ur-Rehman.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d4835"/>
+      <stop offset="1" stop-color="#06271d"/>
+    </linearGradient>
+    <linearGradient id="figure" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b7a59"/>
+      <stop offset="1" stop-color="#15543c"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#bg)"/>
+  <path d="M0 0h640v18H0z" fill="#ffd21f"/>
+  <path d="M0 0h18v800H0z" fill="#ffd21f"/>
+  <path d="M622 0h18v800h-18z" fill="#ffd21f"/>
+  <path d="M0 782h640v18H0z" fill="#ffd21f"/>
+  <circle cx="320" cy="300" r="152" fill="url(#figure)" opacity=".9"/>
+  <path d="M100 800c8-150 99-236 220-236s212 86 220 236H100z" fill="url(#figure)"/>
+  <rect x="64" y="700" width="512" height="64" rx="14" fill="#031b14" opacity=".72"/>
+  <text x="320" y="740" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="4" text-anchor="middle">CANDIDATE PHOTO</text>
+</svg>
