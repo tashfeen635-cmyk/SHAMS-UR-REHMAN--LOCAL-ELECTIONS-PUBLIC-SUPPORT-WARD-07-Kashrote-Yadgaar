@@ -12,7 +12,7 @@ Anonymous public support survey for Shams-ur-Rehman, Ward 7 – Kashrote Yadgaar
 - Replaceable candidate photo and election symbol placeholders in `public/assets/`
 - Admin dashboard at `/admin` with totals, a per-respondent report, date range, and CSV/NDJSON downloads
 - Security headers, strict CSP, responsive layout, reduced-motion support
-- 26 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
+- 27 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
 
 ## Quick start
 
@@ -124,7 +124,7 @@ Vercel + MongoDB Atlas:
 5. Deploy. `api/` serverless functions store responses, sessions, rate limits, and admin sessions in MongoDB; `dist/` serves the public page and admin page. The frontend gets its session token from `/api/survey/status`, with `/api/survey/session` as a fallback.
 6. Do not change `DEVICE_SECRET` after launch unless you want every existing browser device token to become invalid.
 7. Before deploying, you can place the same values in a local `.env` and run `npm run env:check` to verify Atlas connectivity without printing secrets.
-8. After deploying, `GET /api/health` checks only that the function runtime works. `GET /api/health?db=1` also connects to MongoDB and returns `{ ok: true, db: true, responses: <count> }`. API failures now include a safe `code` such as `CONFIG_ERROR`, `MONGO_CONNECT_ERROR`, `MONGO_INDEX_ERROR`, `SESSION_STORAGE_ERROR`, or `STATUS_READ_ERROR`.
+8. After deploying, `GET /api/health` checks only that the function runtime works. `GET /api/health?db=1` also connects to MongoDB and returns `{ ok: true, db: true, responses: <count> }`. API failures now include a safe `code` such as `CONFIG_ERROR`, `MONGO_URI_INVALID`, `MONGO_CONNECT_ERROR`, `MONGO_INDEX_ERROR`, `SESSION_STORAGE_ERROR`, or `STATUS_READ_ERROR`.
 
 Systemd: copy `server.mjs`, `lib/`, `public/`, `dist/`, and `package.json` to `/opt/shams-survey`, install `deploy/shams-survey.service`, and create `/etc/shams-survey/env` with mode `0600`:
 

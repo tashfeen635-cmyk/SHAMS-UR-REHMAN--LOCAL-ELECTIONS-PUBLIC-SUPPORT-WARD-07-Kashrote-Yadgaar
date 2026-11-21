@@ -36,6 +36,7 @@ test("async route failures return coded JSON errors", async () => {
   assert.equal(res.statusCode, 500);
   assert.deepEqual(JSON.parse(res.body), {
     message: "Survey storage is not configured.",
-    code: "CONFIG_ERROR"
+    code: "CONFIG_ERROR",
+    errorName: "Error"
   });
 });
