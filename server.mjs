@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createServer } from "node:http";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";

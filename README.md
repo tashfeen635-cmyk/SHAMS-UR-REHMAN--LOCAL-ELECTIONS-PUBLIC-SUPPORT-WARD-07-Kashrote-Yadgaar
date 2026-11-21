@@ -38,6 +38,17 @@ npm test
 npm run check
 ```
 
+## Local environment file
+
+For local development you can copy `.env.example` to `.env` and fill in the values you need. Real `.env` files are ignored by Git; never commit secrets or paste them into source files.
+
+```sh
+cp .env.example .env
+npm run env:check
+```
+
+`npm run env:check` validates `MONGODB_URI`, `DEVICE_SECRET`, and `ADMIN_TOKEN`, then connects to MongoDB and reports the current response count. It does not print secret values. Vercel does not use `.env`; add the same variables in the Vercel dashboard.
+
 ## Assets
 
 Replace `public/assets/candidate-photo.jpg` and `public/assets/election-symbol.jpg` with the official assets, keeping the same filenames. Run `npm run build` afterwards so `dist/` picks up the replacements. The bundled portrait is a resized 800×800 copy of the supplied image.
@@ -112,6 +123,7 @@ Vercel + MongoDB Atlas:
    - `TRUST_PROXY=1`
 5. Deploy. `api/` serverless functions store responses, sessions, rate limits, and admin sessions in MongoDB; `dist/` serves the public page and admin page. The frontend requests `/api/survey/session` when the static HTML has no injected token.
 6. Do not change `DEVICE_SECRET` after launch unless you want every existing browser device token to become invalid.
+7. Before deploying, you can place the same values in a local `.env` and run `npm run env:check` to verify Atlas connectivity without printing secrets.
 
 Systemd: copy `server.mjs`, `lib/`, `public/`, `dist/`, and `package.json` to `/opt/shams-survey`, install `deploy/shams-survey.service`, and create `/etc/shams-survey/env` with mode `0600`:
 

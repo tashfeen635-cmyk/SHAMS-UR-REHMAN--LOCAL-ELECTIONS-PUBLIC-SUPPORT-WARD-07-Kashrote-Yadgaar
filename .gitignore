@@ -4,3 +4,6 @@ data/*.ndjson
 data/state.json
 data/device-index/
 .DS_Store
+.env
+.env.*
+!.env.example
