@@ -112,6 +112,15 @@
         </div>
 
         <p id="unclassified-note" class="notice" hidden></p>
+        <p id="clear-success" class="notice notice--success" hidden>All survey data was permanently deleted.</p>
+
+        <div class="danger-zone">
+          <div>
+            <h3>Clear all survey data</h3>
+            <p>Permanently delete all survey submissions from the database. This cannot be undone. Admin accounts, authentication, settings, and campaign assets are preserved.</p>
+          </div>
+          <button type="button" class="button button--danger" id="clear-data-button">Clear All Survey Data</button>
+        </div>
       </section>
 
       <section id="section-reports" class="section" data-section-panel="reports" hidden>
@@ -247,6 +256,28 @@
       </section>
     </div>
   </div>
+
+  <dialog id="delete-dialog" class="confirm-dialog" aria-labelledby="delete-dialog-title">
+    <div class="confirm-dialog__header">
+      <span class="confirm-dialog__icon" aria-hidden="true">!</span>
+      <h2 id="delete-dialog-title">Delete ALL survey data?</h2>
+    </div>
+    <p class="confirm-dialog__warning">This is irreversible. Every survey submission will be permanently deleted from the database, including respondent names, YES/NO responses, and timestamps. Dashboard totals, charts, percentages, and reports will reset to zero.</p>
+    <p class="confirm-dialog__warning">Admin accounts, admin sessions, website settings, and campaign assets will not be deleted.</p>
+
+    <label for="delete-confirmation">Type <strong>DELETE ALL DATA</strong> to confirm</label>
+    <input id="delete-confirmation" type="text" autocomplete="off" spellcheck="false" required>
+
+    <label for="delete-password">Admin password</label>
+    <input id="delete-password" type="password" autocomplete="current-password" required>
+
+    <p id="delete-error" class="message message--error" role="alert" hidden></p>
+
+    <div class="confirm-dialog__actions">
+      <button type="button" class="button button--secondary" id="cancel-delete">Cancel</button>
+      <button type="button" class="button button--danger" id="confirm-delete">Permanently Delete All Data</button>
+    </div>
+  </dialog>
 
   <div id="print-report" class="print-report" hidden></div>
   <script src="/admin.js" defer></script>

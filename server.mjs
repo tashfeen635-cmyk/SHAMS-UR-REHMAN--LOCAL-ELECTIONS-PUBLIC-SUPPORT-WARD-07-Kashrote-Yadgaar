@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createServer } from "node:http";
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
@@ -561,6 +561,75 @@ async function handleAdminLogout(req, res) {
   return json(res, 200, { ok: true });
 }
 
+async function deleteAllSurveyData() {
+  const failures = [];
+  try {
+    await writeFile(dataFile, "", "utf8");
+  } catch (error) {
+    failures.push(error);
+  }
+  try {
+    await devices.clear();
+  } catch (error) {
+    failures.push(error);
+  }
+  deviceRecords.clear();
+  if (failures.length) throw failures[0];
+}
+
+async function handleAdminDeleteData(req, res) {
+  if (!await requireAdmin(req, res)) return;
+
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return json(res, 405, { message: "Method not allowed." });
+  }
+
+  if (!originAllowed(req)) {
+    return json(res, 403, { message: "Invalid request origin." });
+  }
+
+  const contentType = String(req.headers["content-type"] ?? "").toLowerCase();
+  if (!contentType.startsWith("application/json")) {
+    return json(res, 415, { message: "Invalid request format." });
+  }
+
+  let rawBody;
+  try {
+    rawBody = await readBody(req);
+  } catch (error) {
+    return json(res, error.status ?? 400, { message: error.message ?? "Invalid request." });
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return json(res, 400, { message: "Invalid submission." });
+  }
+
+  if (!await checkRateLimit(getClientKey(req), "adminLogin")) {
+    return json(res, 429, { message: "Too many attempts. Please try again later." });
+  }
+
+  if (payload?.confirmation !== "DELETE ALL DATA") {
+    return json(res, 400, { message: "Invalid confirmation text." });
+  }
+
+  if (typeof payload?.password !== "string" || !safeEqual(payload.password, adminToken)) {
+    return json(res, 401, { message: "Invalid admin password." });
+  }
+
+  try {
+    await deleteAllSurveyData();
+  } catch (error) {
+    console.error("Failed to delete survey data", error);
+    return json(res, 500, { message: "Survey data could not be deleted. Please try again." });
+  }
+
+  return json(res, 200, { ok: true, deleted: true });
+}
+
 function firstStringField(record, keys) {
   for (const key of keys) {
     const value = record[key];
@@ -692,6 +761,10 @@ const server = createServer(async (req, res) => {
 
     if (pathname === "/api/admin/logout") {
       return handleAdminLogout(req, res);
+    }
+
+    if (pathname === "/api/admin/delete-data") {
+      return handleAdminDeleteData(req, res);
     }
 
     if (pathname === "/api/results" && req.method === "GET") {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { appendFile, readFile } from "node:fs/promises";
+import { appendFile, readFile, readdir } from "node:fs/promises";
 import { after, test } from "node:test";
 import { getSession, postJson, postResponse, startServer } from "./helpers.mjs";
 
@@ -276,4 +276,85 @@ test("admin UI exposes dashboard navigation, filters, charts, and downloads", as
   assert.match(script, /api\/results\/export/);
   assert.match(script, /window\.print\(\)/);
   assert.doesNotMatch(script, /other/i);
+});
+
+test("clears all survey data only after full admin confirmation", async () => {
+  const isolated = await startServer({ ADMIN_TOKEN });
+  try {
+    const ip = "10.40.0.1";
+    const login = await postJson(isolated.origin, "/api/admin/login", { token: ADMIN_TOKEN }, ip);
+    assert.equal(login.status, 200);
+    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
+
+    const visitor = await getSession(isolated.origin, ip);
+    await delay(750);
+    const submitted = await postResponse(
+      isolated.origin,
+      { name: "Ali Khan", answer: "yes", token: visitor.token, website: "" },
+      ip,
+      { Cookie: visitor.cookie }
+    );
+    assert.equal(submitted.status, 201);
+
+    const deleteData = (payload, extraHeaders = {}, headersCookie = cookie) => postJson(
+      isolated.origin,
+      "/api/admin/delete-data",
+      payload,
+      ip,
+      { Cookie: headersCookie, ...extraHeaders }
+    );
+    const validPayload = { confirmation: "DELETE ALL DATA", password: ADMIN_TOKEN };
+
+    assert.equal((await deleteData(validPayload, {}, "")).status, 401);
+    assert.equal((await deleteData({ ...validPayload, confirmation: "DELETE" })).status, 400);
+    assert.equal((await deleteData({ ...validPayload, password: "wrong-password" })).status, 401);
+    assert.equal((await deleteData(validPayload, { Origin: "https://evil.example" })).status, 403);
+
+    const beforeInvalid = await (await fetch(`${isolated.origin}/api/results`, { headers: { Cookie: cookie } })).json();
+    assert.equal(beforeInvalid.total, 1);
+
+    const deletion = await deleteData(validPayload);
+    assert.equal(deletion.status, 200);
+    assert.deepEqual(await deletion.json(), { ok: true, deleted: true });
+
+    const cleared = await (await fetch(`${isolated.origin}/api/results`, { headers: { Cookie: cookie } })).json();
+    assert.equal(cleared.total, 0);
+    assert.deepEqual(cleared.counts, { yes: 0, no: 0 });
+    assert.equal(cleared.filteredTotal, 0);
+    assert.deepEqual(cleared.responses, []);
+
+    assert.deepEqual(
+      await (await fetch(`${isolated.origin}/api/admin/session`, { headers: { Cookie: cookie } })).json(),
+      { authenticated: true }
+    );
+    assert.equal(await readFile(isolated.dataFile, "utf8"), "");
+    assert.ok(await readFile(isolated.stateFile, "utf8"));
+    const deviceFiles = await readdir(`${isolated.tempDir}/device-index`).catch(() => []);
+    assert.equal(deviceFiles.filter((name) => /^[a-f0-9]{64}$/.test(name)).length, 0);
+
+    const freshVisitor = await getSession(isolated.origin, ip, visitor.cookie);
+    await delay(750);
+    const resubmitted = await postResponse(
+      isolated.origin,
+      { name: "New Vote", answer: "no", token: freshVisitor.token, website: "" },
+      ip,
+      { Cookie: visitor.cookie }
+    );
+    assert.equal(resubmitted.status, 201);
+  } finally {
+    await isolated.stop();
+  }
+});
+
+test("admin UI includes an irreversible clear data confirmation", async () => {
+  const html = await readFile(new URL("../public/admin.html", import.meta.url), "utf8");
+  assert.match(html, /Clear All Survey Data/i);
+  assert.match(html, /DELETE ALL DATA/);
+  assert.match(html, /Admin password/i);
+  assert.match(html, /irreversible/i);
+  assert.match(html, /id="delete-dialog"/);
+
+  const script = await readFile(new URL("../public/admin.js", import.meta.url), "utf8");
+  assert.match(script, /api\/admin\/delete-data/);
+  assert.match(script, /confirmation !== "DELETE ALL DATA"/);
 });

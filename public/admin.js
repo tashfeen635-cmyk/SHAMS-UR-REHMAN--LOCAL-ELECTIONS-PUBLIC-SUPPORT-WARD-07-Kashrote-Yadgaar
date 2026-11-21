@@ -15,6 +15,14 @@ const lastUpdated = document.getElementById("last-updated");
 const unclassifiedNote = document.getElementById("unclassified-note");
 const latestActivity = document.getElementById("latest-activity");
 const printReport = document.getElementById("print-report");
+const clearSuccess = document.getElementById("clear-success");
+const clearDataButton = document.getElementById("clear-data-button");
+const deleteDialog = document.getElementById("delete-dialog");
+const deleteConfirmation = document.getElementById("delete-confirmation");
+const deletePassword = document.getElementById("delete-password");
+const deleteError = document.getElementById("delete-error");
+const cancelDeleteButton = document.getElementById("cancel-delete");
+const confirmDeleteButton = document.getElementById("confirm-delete");
 
 const filterSearch = document.getElementById("filter-search");
 const filterAnswer = document.getElementById("filter-answer");
@@ -378,6 +386,49 @@ async function preparePrint() {
   }
 }
 
+function openDeleteDialog() {
+  clearSuccess.hidden = true;
+  setMessage(deleteError, "");
+  deleteConfirmation.value = "";
+  deletePassword.value = "";
+  deleteDialog.showModal();
+  deleteConfirmation.focus();
+}
+
+async function confirmDeleteAllData() {
+  const confirmation = deleteConfirmation.value.trim();
+  const password = deletePassword.value;
+  setMessage(deleteError, "");
+
+  if (confirmation !== "DELETE ALL DATA") {
+    setMessage(deleteError, 'Type "DELETE ALL DATA" exactly to continue.');
+    return;
+  }
+  if (!password) {
+    setMessage(deleteError, "Enter your admin password to continue.");
+    return;
+  }
+
+  confirmDeleteButton.disabled = true;
+  confirmDeleteButton.textContent = "Deleting…";
+  try {
+    await api("/api/admin/delete-data", {
+      method: "POST",
+      body: JSON.stringify({ confirmation, password })
+    });
+    deleteDialog.close();
+    state.page = 1;
+    await loadReport();
+    clearSuccess.hidden = false;
+  } catch (error) {
+    setMessage(deleteError, error.message || "Could not delete survey data. Please try again.");
+  } finally {
+    deletePassword.value = "";
+    confirmDeleteButton.disabled = false;
+    confirmDeleteButton.textContent = "Permanently Delete All Data";
+  }
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setMessage(loginError, "");
@@ -444,6 +495,10 @@ document.getElementById("download-csv").addEventListener("click", () => {
 });
 
 document.getElementById("print-report-button").addEventListener("click", preparePrint);
+
+clearDataButton.addEventListener("click", openDeleteDialog);
+cancelDeleteButton.addEventListener("click", () => deleteDialog.close());
+confirmDeleteButton.addEventListener("click", confirmDeleteAllData);
 
 filterSearch.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
