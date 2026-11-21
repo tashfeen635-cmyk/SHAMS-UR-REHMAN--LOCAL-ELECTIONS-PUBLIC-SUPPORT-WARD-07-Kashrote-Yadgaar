@@ -252,6 +252,25 @@ test("marks the survey as checking before scripts and hides the form while check
   assert.match(styles, /html\.is-checking \.survey-form\s*\{[^}]*visibility:\s*hidden/);
 });
 
+test("renders the campaign header, symbol card, full choices, and campaign footer", () => {
+  assert.match(markup, /src="\/assets\/candidate-photo\.jpg"/);
+  assert.match(markup, /src="\/assets\/election-symbol\.jpg"/);
+  assert.match(markup, /LOCAL ELECTIONS &middot; PUBLIC SUPPORT/);
+  assert.match(markup, /WARD <strong>07<\/strong> &ndash; Kashrote Yadgaar/);
+  assert.match(markup, /YOUR CANDIDATE/);
+  assert.match(markup, /ELECTION SYMBOL/);
+  assert.match(markup, /VOLUNTARY PUBLIC SUPPORT SURVEY/);
+  assert.match(markup, /YES, I SUPPORT/);
+  assert.match(markup, /NO, I DO NOT SUPPORT/);
+  assert.match(markup, /میرا شیر، میری ذمہ داری/);
+  assert.match(
+    markup,
+    /Participation is voluntary\. Your response is an informal opinion and does not constitute an official election vote\./
+  );
+  assert.doesNotMatch(markup, /option__short/);
+  assert.doesNotMatch(markup, /developed by/);
+});
+
 test("keeps the form visually gated until saved status says submitted", async () => {
   const dom = await createDom({
     deferStatus: true,

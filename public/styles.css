@@ -1,19 +1,20 @@
 :root {
   color-scheme: light;
-  --green-950: #06291f;
-  --green-900: #0a3d2c;
-  --green-800: #0e5b3c;
-  --green-700: #16a85c;
-  --green-600: #25c86a;
+  --green-950: #06452f;
+  --green-900: #06452f;
+  --green-800: #08752d;
+  --green-700: #08752d;
+  --green-600: #16a34a;
   --green-100: #eaf7ee;
-  --yellow: #ffd21f;
-  --yellow-deep: #f2b705;
-  --red: #d92d24;
-  --ink: #102a20;
+  --yellow: #f5d400;
+  --yellow-deep: #f5d400;
+  --red: #e31b23;
+  --ink: #06452f;
   --muted: #5d7167;
   --line: #dbe7df;
   --slate: #334155;
-  --danger: #c02a20;
+  --danger: #e31b23;
+  --background: #f7f9f5;
   --radius: 28px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -728,6 +729,22 @@ body {
   line-height: 1.55;
 }
 
+.campaign-footer {
+  display: none;
+}
+
+.campaign-footer__rule {
+  width: 34px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--yellow);
+}
+
+.campaign-footer__slogan,
+.campaign-footer__disclaimer {
+  margin: 0;
+}
+
 .credit {
   display: flex;
   flex-wrap: wrap;
@@ -1059,120 +1076,167 @@ body {
 }
 
 @media (max-width: 480px) {
+  :root {
+    --radius: 18px;
+  }
+
+  html,
+  body {
+    overflow: auto;
+    overscroll-behavior: auto;
+    background: var(--background);
+  }
+
   .viewport {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
     padding: 8px;
+    overflow: auto;
+    place-items: start center;
   }
 
   .hero {
+    width: 100%;
+    max-width: 430px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     border-radius: 18px;
-    box-shadow: 0 12px 32px rgba(0, 13, 9, 0.36);
+    box-shadow: 0 10px 28px rgba(0, 13, 9, 0.24);
+    overflow: hidden;
   }
 
   .hero__ribbon,
   .candidate-panel::after,
-  .eyebrow,
   .brand__urdu,
-  .candidate-copy__kicker,
-  .accent-rule,
   .candidate-copy__text,
   .facts,
   .seal,
   .campaign-strip__note,
   .survey-head__urdu,
-  .disclaimer,
   .credit {
     display: none !important;
   }
 
   .candidate-panel {
     gap: 9px;
-    padding: 12px 14px 11px;
+    padding: 12px 14px 10px;
     background:
-      radial-gradient(circle at 12% 0%, rgba(37, 200, 106, 0.16), transparent 42%),
-      linear-gradient(150deg, var(--green-900), var(--green-950));
+      radial-gradient(circle at 12% 0%, rgba(22, 163, 74, 0.16), transparent 42%),
+      linear-gradient(155deg, var(--green-900), var(--green-950));
   }
 
   .brand {
-    gap: 9px;
+    gap: 10px;
   }
 
   .brand__badge {
-    width: 36px;
-    border-width: 2px;
-    box-shadow: 0 0 0 3px rgba(255, 210, 31, 0.14);
+    width: 40px;
+    border-width: 3px;
+    transform: none;
   }
 
   .brand__badge span {
-    font-size: 16px;
+    font-size: 17px;
+  }
+
+  .eyebrow {
+    margin: 0 0 3px;
+    font-size: 9px;
+    line-height: 1.2;
+    letter-spacing: 0.12em;
   }
 
   .brand__constituency {
     font-size: 11px;
-    line-height: 1.2;
+    line-height: 1.25;
     letter-spacing: 0.04em;
   }
 
   .candidate-main {
-    grid-template-columns: 104px minmax(0, 1fr);
-    gap: 11px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 10px;
     align-items: center;
   }
 
   .portrait {
     border-width: 3px;
-    border-radius: 12px 12px 24px 12px;
+    border-radius: 12px 12px 18px 12px;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+  }
+
+  .candidate-copy__kicker {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 8.5px;
+    letter-spacing: 0.18em;
   }
 
   .candidate-copy h1 {
     font-size: 20px;
-    line-height: 1.04;
-    letter-spacing: -0.03em;
-    white-space: nowrap;
+    line-height: 1.3;
+    letter-spacing: -0.04em;
+    white-space: normal;
   }
 
-  .candidate-copy__urdu {
-    margin-top: 5px;
-    font-size: 15px;
-    line-height: 1.5;
+  .accent-rule {
+    display: block;
+    width: 52px;
+    height: 4px;
+    margin: 7px 0 0;
+    background: linear-gradient(90deg, var(--yellow) 0 65%, var(--red) 65%);
   }
 
   .campaign-strip {
     justify-content: center;
     gap: 0;
-    padding-top: 9px;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 8px;
+    border-top: 1px solid rgba(245, 212, 0, 0.22);
   }
 
   .symbol {
-    width: 76px;
-    gap: 3px;
-    padding: 5px 5px 4px;
-    border-bottom: 3px solid var(--red);
-    border-radius: 10px;
+    width: 124px;
+    gap: 4px;
+    padding: 6px 6px 5px;
+    border: 2px solid var(--yellow);
+    border-radius: 12px;
     background: #ffffff;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 2px rgba(227, 27, 35, 0.35), 0 8px 16px rgba(0, 0, 0, 0.22);
   }
 
   .symbol__image {
-    height: 40px;
+    height: 48px;
     object-fit: contain;
   }
 
   .symbol__label {
-    font-size: 7px;
-    letter-spacing: 0.06em;
+    font-size: 8px;
+    letter-spacing: 0.1em;
   }
 
   .survey-panel {
+    justify-content: flex-start;
     gap: 8px;
-    padding: 12px 14px 14px;
+    padding: 12px 14px 0;
+    border-radius: 0 0 18px 18px;
     background: #ffffff;
+    overflow: hidden;
+  }
+
+  .survey-head {
+    display: grid;
+    gap: 2px;
+  }
+
+  .eyebrow--green {
+    margin: 0;
+    font-size: 9px;
+    letter-spacing: 0.12em;
   }
 
   .survey-head h2 {
     font-size: 18px;
-    line-height: 1.18;
+    line-height: 1.2;
     letter-spacing: -0.02em;
   }
 
@@ -1188,20 +1252,20 @@ body {
 
   .form-field__label,
   .question__title {
-    font-size: 11px;
-    letter-spacing: 0.06em;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
   }
 
   .form-field__input {
-    min-height: 48px;
-    padding: 0 13px;
+    min-height: 46px;
+    padding: 0 12px;
     border-color: #bfd0c6;
     border-radius: 10px;
     font-size: 15px;
   }
 
   .question {
-    margin-top: 1px;
+    margin-top: 0;
   }
 
   .options {
@@ -1210,8 +1274,9 @@ body {
   }
 
   .option {
-    min-height: 52px;
-    padding: 0 10px;
+    min-height: 54px;
+    gap: 8px;
+    padding: 6px 8px;
     border-color: #bfd0c6;
     border-radius: 10px;
   }
@@ -1226,54 +1291,92 @@ body {
   }
 
   .option__title {
-    font-size: 13px;
-    letter-spacing: 0.08em;
+    font-size: 10.5px;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
   }
 
-  .option__long {
-    display: none;
+  .option--no.is-selected {
+    border-color: var(--green-700);
+    background: var(--green-100);
+    box-shadow: 0 0 0 3px rgba(8, 117, 45, 0.12);
   }
 
-  .option__short {
-    display: inline;
+  .option--no.is-selected .option__indicator {
+    border-color: var(--green-700);
+  }
+
+  .option--no.is-selected .option__indicator::after {
+    background: var(--green-700);
   }
 
   .submit {
-    min-height: 50px;
+    min-height: 48px;
     margin-top: 8px;
     border-radius: 10px;
     background: var(--green-800);
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0.1em;
-    box-shadow: inset 0 3px 0 var(--yellow), 0 8px 18px rgba(14, 91, 60, 0.22);
+    box-shadow: inset 0 3px 0 var(--yellow), 0 8px 18px rgba(8, 117, 45, 0.22);
   }
 
   .status {
     min-height: 0;
-    margin-top: 6px;
+    margin-top: 5px;
     font-size: 11px;
   }
 
   .success {
     gap: 8px;
+    padding: 4px 0;
   }
 
   .success__icon {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 0 0 4px rgba(245, 212, 0, 0.22);
   }
 
   .success__icon svg {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .success__title {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .success__text {
     font-size: 11.5px;
+  }
+
+  .campaign-footer {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    margin: 10px -14px 0;
+    padding: 9px 14px calc(9px + env(safe-area-inset-bottom));
+    background: var(--green-950);
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .campaign-footer__rule {
+    width: 28px;
+    height: 2px;
+  }
+
+  .campaign-footer__slogan {
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .campaign-footer__disclaimer {
+    max-width: 42ch;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 8.5px;
+    line-height: 1.35;
   }
 }
 
