@@ -268,6 +268,21 @@ async function serveStatic(res, filename, contentType) {
   }
 }
 
+async function handleSurveySession(req, res) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return json(res, 405, { message: "Method not allowed." });
+  }
+
+  const session = await createSession(req);
+  if (session.error) {
+    return json(res, 429, { message: session.error });
+  }
+
+  ensureDevice(req, res);
+  return json(res, 200, { token: session.token });
+}
+
 async function handleSurveyStatus(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -690,6 +705,10 @@ const server = createServer(async (req, res) => {
 
     if (pathname === "/api/health" && req.method === "GET") {
       return json(res, 200, { ok: true });
+    }
+
+    if (pathname === "/api/survey/session") {
+      return handleSurveySession(req, res);
     }
 
     if (pathname === "/api/survey/status") {

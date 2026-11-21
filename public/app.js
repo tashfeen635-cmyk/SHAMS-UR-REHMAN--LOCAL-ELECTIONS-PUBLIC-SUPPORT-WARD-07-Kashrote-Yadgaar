@@ -9,7 +9,8 @@ const successText = document.querySelector("#success-text");
 const website = document.querySelector("#website");
 const voterName = document.querySelector("#voter-name");
 const comment = document.querySelector("#comment");
-const token = document.querySelector('meta[name="survey-token"]')?.content ?? "";
+const tokenMeta = document.querySelector('meta[name="survey-token"]');
+let surveyToken = tokenMeta?.content ?? "";
 
 const ALREADY_MESSAGE = "You have already submitted your response from this device.";
 const THANKS_TITLE = "Thank you for participating!";
@@ -20,6 +21,25 @@ let submittedAnswer = null;
 
 function selectedAnswer() {
   return radios.find((radio) => radio.checked)?.value ?? null;
+}
+
+async function ensureSurveyToken() {
+  if (surveyToken && surveyToken !== "__SURVEY_TOKEN__") return;
+
+  try {
+    const response = await fetch("/api/survey/session", {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (typeof data.token === "string" && /^[A-Za-z0-9_-]{32}$/.test(data.token)) {
+      surveyToken = data.token;
+    }
+  } catch {
+    surveyToken = "";
+  }
 }
 
 function setStatus(message, type = "none") {
@@ -149,7 +169,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  if (!token) {
+  if (!surveyToken || surveyToken === "__SURVEY_TOKEN__") {
     setStatus("Your survey session has expired. Please reload the page.", "error");
     return;
   }
@@ -171,7 +191,7 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         name: cleanName,
         answer,
-        token,
+        token: surveyToken,
         comment: comment?.value.trim() ?? "",
         website: website?.value ?? ""
       })
@@ -202,4 +222,4 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-checkStatus();
+ensureSurveyToken().then(checkStatus);

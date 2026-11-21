@@ -56,6 +56,7 @@ function createElement(extra = {}) {
 
 async function createDom({
   token = "test-token",
+  session = { ok: false },
   responses = [],
   status = { submitted: false, answer: null }
 } = {}) {
@@ -103,6 +104,15 @@ async function createDom({
 
   const fetchStub = async (url, init) => {
     calls.push({ url, init });
+
+    if (url === "/api/survey/session") {
+      const next = { ...session };
+      return {
+        ok: next.ok ?? false,
+        status: next.status ?? 503,
+        json: async () => next.body ?? {}
+      };
+    }
 
     if (url === "/api/survey/status") {
       const next = statusQueue.shift() ?? { submitted: false, answer: null };
@@ -268,6 +278,20 @@ test("recovers from network failures and shows an error", async () => {
   assert.equal(dom.status.textContent, "Network down");
   assert.equal(dom.status.classes.has("status--error"), true);
   assert.equal(dom.status.attributes.role, "alert");
+});
+
+test("loads a session token when the page is served statically", async () => {
+  const token = "a".repeat(32);
+  const dom = await createDom({
+    token: "__SURVEY_TOKEN__",
+    session: { ok: true, body: { token } }
+  });
+  await dom.enterName("Ali Khan");
+  await dom.select(dom.yes);
+  await dom.submit();
+
+  const post = dom.calls.find((call) => call.url === "/api/responses");
+  assert.equal(JSON.parse(post.init.body).token, token);
 });
 
 test("blocks submission when the session token is missing", async () => {

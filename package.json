@@ -11,6 +11,9 @@
     "start": "node server.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check server.mjs && node --check lib/state.mjs && node --check lib/device-store.mjs && node --check public/app.js && node --check public/admin.js && node --check scripts/build.mjs && node --check scripts/dev.mjs"
+    "check": "node --check server.mjs && node --check lib/state.mjs && node --check lib/device-store.mjs && node --check lib/mongo-store.mjs && node --check lib/vercel-api.mjs && node --check public/app.js && node --check public/admin.js && node --check scripts/build.mjs && node --check scripts/dev.mjs && node --check api/health.mjs && node --check api/responses.mjs && node --check api/results.mjs && node --check api/survey/session.mjs && node --check api/survey/status.mjs && node --check api/admin/login.mjs && node --check api/admin/session.mjs && node --check api/admin/logout.mjs && node --check api/results/export.mjs"
+  },
+  "dependencies": {
+    "mongodb": "^7.9.1"
   }
 }

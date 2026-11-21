@@ -7,12 +7,12 @@ Anonymous public support survey for Shams-ur-Rehman, Ward 7 – Kashrote Yadgaar
 - Single-use session tokens, honeypot field, minimum-fill delay, per-IP rate limits, and origin checks
 - One response per browser profile: a signed, HttpOnly, SameSite cookie (Secure in production); only its SHA-256 hash is stored
 - Atomic device dedupe index in `data/device-index/` blocks simultaneous duplicate requests
-- Persistent sessions, rate limits, and admin logins in `data/state.json` (survive restarts)
+- Persistent sessions, rate limits, and admin logins in `data/state.json` locally, or in MongoDB Atlas on Vercel
 - Required name field with a Yes/No response and an optional review/comment
 - Replaceable candidate photo and election symbol placeholders in `public/assets/`
 - Admin dashboard at `/admin` with totals, a per-respondent report, date range, and CSV/NDJSON downloads
 - Security headers, strict CSP, responsive layout, reduced-motion support
-- 22 automated tests covering the API, device dedupe, validation, persistence, and frontend logic
+- 23 automated tests covering the API, device dedupe, validation, persistence, and frontend logic
 
 ## Quick start
 
@@ -56,6 +56,9 @@ Replace `public/assets/candidate-photo.jpg` and `public/assets/election-symbol.j
 | `COOKIE_SECURE` | auto | `Secure` flag: on by default in production; set `1` to force on, `0` for local HTTP testing |
 | `TRUST_PROXY` | `0` | Set to `1` only behind a trusted reverse proxy |
 | `NODE_ENV` | unset | `production` serves files from `dist/` |
+| `MONGODB_URI` | unset | Enables MongoDB storage in Vercel functions (required there) |
+| `MONGODB_DB` | `shams_survey` | MongoDB database name |
+| `DEVICE_SECRET` | unset | Long random secret for signed device cookies on Vercel (required there) |
 
 ## Admin
 
@@ -69,8 +72,9 @@ Visit `/admin`, enter `ADMIN_TOKEN`, and sign in. Admin cookies are `HttpOnly`, 
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/api/health` | Health check |
+| `GET` | `/api/survey/session` | Creates a survey session token for statically hosted pages (sets the device cookie) |
 | `GET` | `/api/survey/status` | Returns `{ submitted, answer }` for the current browser cookie (sets it if missing) |
-| `POST` | `/api/responses` | Submit `{ name, answer, token, website }` with the device cookie; `name` is required and `answer` is `yes` or `no` |
+| `POST` | `/api/responses` | Submit `{ name, answer, token, website, comment }` with the device cookie; `name` is required and `answer` is `yes` or `no` |
 | `POST` | `/api/admin/login` | Submit `{ token }`, sets admin cookie |
 | `GET` | `/api/admin/session` | Returns `{ authenticated }` |
 | `POST` | `/api/admin/logout` | Clears admin session |
@@ -83,6 +87,8 @@ Visit `/admin`, enter `ADMIN_TOKEN`, and sign in. Admin cookies are `HttpOnly`, 
 - `data/device-index/` — one empty file per submitted device hash; exclusive creation is the unique index that prevents concurrent duplicates.
 - `data/state.json` — hashed client keys, device-token signing secret, active sessions, rate-limit buckets, and admin sessions. Keep this file private.
 
+On Vercel, the same data lives in MongoDB collections: `responses` (unique `deviceHash`), `sessions`, `rate_limits`, and `admin_sessions`.
+
 Existing responses without `deviceHash` are preserved as-is; they simply cannot be matched to a browser cookie and need no migration. The admin report maps legacy `voterName`, `respondentName`, `fullName`, or `submittedBy` values into the Name column. Records with no stored name are shown as `Not provided`; their original data is left untouched.
 
 ## Deployment
@@ -92,6 +98,20 @@ Docker:
 ```sh
 docker compose up --build -d
 ```
+
+Vercel + MongoDB Atlas:
+
+1. Push this repository to GitHub, then import it in Vercel.
+2. Keep the detected build command `npm run build` and output directory `dist` from `vercel.json`.
+3. Create a MongoDB Atlas cluster, allow access from `0.0.0.0/0` (Vercel serverless egress is not a fixed IP), and create a database user.
+4. Add these Vercel project environment variables:
+   - `MONGODB_URI` — Atlas connection string with the database user password
+   - `MONGODB_DB` — e.g. `shams_survey`
+   - `DEVICE_SECRET` — a long random permanent secret (generate with `openssl rand -hex 32`)
+   - `ADMIN_TOKEN` — a separate long random admin secret
+   - `TRUST_PROXY=1`
+5. Deploy. `api/` serverless functions store responses, sessions, rate limits, and admin sessions in MongoDB; `dist/` serves the public page and admin page. The frontend requests `/api/survey/session` when the static HTML has no injected token.
+6. Do not change `DEVICE_SECRET` after launch unless you want every existing browser device token to become invalid.
 
 Systemd: copy `server.mjs`, `lib/`, `public/`, `dist/`, and `package.json` to `/opt/shams-survey`, install `deploy/shams-survey.service`, and create `/etc/shams-survey/env` with mode `0600`:
 
