@@ -215,26 +215,6 @@ test("validates the name and response", async () => {
   assert.equal(record.answer, "yes");
 });
 
-test("stores an optional comment when provided", async () => {
-  const ip = "10.10.0.11";
-  const visitor = await getSession(origin, ip);
-  await delay(750);
-  const response = await postResponse(
-    origin,
-    {
-      name: "Ali Khan",
-      answer: "yes",
-      token: visitor.token,
-      comment: "  Please keep our streets clean.  ",
-      website: ""
-    },
-    ip,
-    { Cookie: visitor.cookie }
-  );
-  assert.equal(response.status, 201);
-  assert.equal((await readRecords()).at(-1).comment, "Please keep our streets clean.");
-});
-
 test("existing responses survive a server restart", async () => {
   const ip = "10.10.0.7";
   const visitor = await getSession(origin, ip);

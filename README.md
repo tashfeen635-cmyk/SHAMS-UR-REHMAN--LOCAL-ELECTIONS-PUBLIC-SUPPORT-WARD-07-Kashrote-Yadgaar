@@ -8,11 +8,11 @@ Anonymous public support survey for Shams-ur-Rehman, Ward 7 – Kashrote Yadgaar
 - One response per browser profile: a signed, HttpOnly, SameSite cookie (Secure in production); only its SHA-256 hash is stored
 - Atomic device dedupe index in `data/device-index/` blocks simultaneous duplicate requests
 - Persistent sessions, rate limits, and admin logins in `data/state.json` locally, or in MongoDB Atlas on Vercel
-- Required name field with a Yes/No response and an optional review/comment
+- Required name field with a Yes/No response
 - Replaceable candidate photo and election symbol placeholders in `public/assets/`
 - Admin dashboard at `/admin` with totals, a per-respondent report, date range, and CSV/NDJSON downloads
 - Security headers, strict CSP, responsive layout, reduced-motion support
-- 27 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
+- 25 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
 
 ## Quick start
 
@@ -85,7 +85,7 @@ Visit `/admin`, enter `ADMIN_TOKEN`, and sign in. Admin cookies are `HttpOnly`, 
 | `GET` | `/api/health` | Health check |
 | `GET` | `/api/survey/session` | Creates a survey session token for statically hosted pages (sets the device cookie) |
 | `GET` | `/api/survey/status` | Returns `{ submitted, answer, token }` for the current browser cookie (sets it if missing) |
-| `POST` | `/api/responses` | Submit `{ name, answer, token, website, comment }` with the device cookie; `name` is required and `answer` is `yes` or `no` |
+| `POST` | `/api/responses` | Submit `{ name, answer, token, website }` with the device cookie; `name` is required and `answer` is `yes` or `no` |
 | `POST` | `/api/admin/login` | Submit `{ token }`, sets admin cookie |
 | `GET` | `/api/admin/session` | Returns `{ authenticated }` |
 | `POST` | `/api/admin/logout` | Clears admin session |

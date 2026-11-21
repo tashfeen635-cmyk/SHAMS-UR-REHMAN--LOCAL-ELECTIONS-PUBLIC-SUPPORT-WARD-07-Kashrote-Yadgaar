@@ -69,7 +69,6 @@ async function createDom({
   const successText = createElement();
   const website = createElement();
   const voterName = createElement();
-  const comment = createElement();
   const tokenElement = createElement({ content: token });
 
   const yesOption = createElement();
@@ -88,7 +87,6 @@ async function createDom({
     ["#success-text", successText],
     ["#website", website],
     ["#voter-name", voterName],
-    ["#comment", comment],
     ['meta[name="survey-token"]', tokenElement]
   ]);
 
@@ -144,7 +142,6 @@ async function createDom({
     yes,
     no,
     voterName,
-    comment,
     yesOption,
     noOption,
     calls,
@@ -155,10 +152,6 @@ async function createDom({
     enterName(value) {
       voterName.value = value;
       return voterName.dispatch("input");
-    },
-    enterComment(value) {
-      comment.value = value;
-      return comment.dispatch("input");
     },
     submit() {
       return form.dispatch("submit", { preventDefault() {} });
@@ -201,7 +194,6 @@ test("posts the name and answer, then shows success", async () => {
     name: "Ali Khan",
     answer: "yes",
     token: "test-token",
-    comment: "",
     website: ""
   });
   assert.equal(dom.form.hidden, true);
@@ -209,18 +201,6 @@ test("posts the name and answer, then shows success", async () => {
   assert.equal(dom.successTitle.textContent, "Thank you for participating!");
   assert.equal(dom.successText.textContent, "Your response has been successfully submitted.");
   assert.equal(dom.successTitle.focused, true);
-  assert.equal(dom.comment.disabled, true);
-});
-
-test("submits an optional comment with the response", async () => {
-  const dom = await createDom();
-  await dom.enterName("Ali Khan");
-  await dom.enterComment("  Great work in our neighbourhood.  ");
-  await dom.select(dom.yes);
-  await dom.submit();
-
-  const post = dom.calls.find((call) => call.url === "/api/responses");
-  assert.equal(JSON.parse(post.init.body).comment, "Great work in our neighbourhood.");
 });
 
 test("blocks submission until a name is entered", async () => {

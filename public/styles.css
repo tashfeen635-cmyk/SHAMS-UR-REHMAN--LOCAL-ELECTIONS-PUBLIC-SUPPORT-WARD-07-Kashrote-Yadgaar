@@ -448,15 +448,6 @@ body {
   color: var(--red);
 }
 
-.optional {
-  margin-left: 5px;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
 .form-field__input {
   width: 100%;
   min-height: 42px;
@@ -478,13 +469,6 @@ body {
   outline: none;
   border-color: var(--green-700);
   box-shadow: 0 0 0 3px rgba(22, 168, 92, 0.16);
-}
-
-.form-field__textarea {
-  min-height: 54px;
-  padding: 9px 12px;
-  line-height: 1.4;
-  resize: vertical;
 }
 
 .question {
@@ -980,10 +964,6 @@ body {
     font-size: 10px;
   }
 
-  .form-field__textarea {
-    min-height: 48px;
-  }
-}
 
 @media (max-height: 700px) and (max-width: 820px) {
   .viewport {
@@ -1056,10 +1036,6 @@ body {
 
   .form-field__input {
     min-height: 38px;
-  }
-
-  .form-field__textarea {
-    min-height: 44px;
   }
 
   .options {

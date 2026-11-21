@@ -8,7 +8,6 @@ const successTitle = document.querySelector("#success-title");
 const successText = document.querySelector("#success-text");
 const website = document.querySelector("#website");
 const voterName = document.querySelector("#voter-name");
-const comment = document.querySelector("#comment");
 const tokenMeta = document.querySelector('meta[name="survey-token"]');
 let surveyToken = tokenMeta?.content ?? "";
 
@@ -88,7 +87,6 @@ function lockControls(answer) {
   submitButton.classList.remove("is-loading");
   submitLabel.textContent = "RESPONSE RECORDED";
   if (voterName) voterName.disabled = true;
-  if (comment) comment.disabled = true;
 }
 
 function showSuccess(title, message, answer) {
@@ -200,7 +198,6 @@ form.addEventListener("submit", async (event) => {
         name: cleanName,
         answer,
         token: surveyToken,
-        comment: comment?.value.trim() ?? "",
         website: website?.value ?? ""
       })
     });

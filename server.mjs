@@ -34,7 +34,6 @@ const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const MIN_FILL_MS = 700;
 const MAX_BODY_BYTES = 4096;
 const MAX_NAME_LENGTH = 80;
-const MAX_COMMENT_LENGTH = 240;
 const RATE_LIMITS = {
   session: { windowMs: 10 * 60 * 1000, max: 120 },
   submission: { windowMs: 10 * 60 * 1000, max: 5 },
@@ -334,15 +333,7 @@ async function handleSubmission(req, res) {
     return json(res, 400, { message: "Invalid submission." });
   }
 
-  const { name, answer, token, website, comment } = payload;
-
-  if (comment !== undefined && typeof comment !== "string") {
-    return json(res, 400, { message: "Invalid submission." });
-  }
-  const cleanComment = typeof comment === "string" ? comment.trim() : "";
-  if (cleanComment.length > MAX_COMMENT_LENGTH) {
-    return json(res, 400, { message: `Please keep your comment under ${MAX_COMMENT_LENGTH} characters.` });
-  }
+  const { name, answer, token, website } = payload;
 
   if (website !== undefined && (typeof website !== "string" || website.trim() !== "")) {
     return json(res, 400, { message: "Invalid submission." });
@@ -404,7 +395,6 @@ async function handleSubmission(req, res) {
     id: randomUUID(),
     name: cleanName,
     answer,
-    ...(cleanComment ? { comment: cleanComment } : {}),
     deviceHash,
     submittedAt: new Date().toISOString()
   };
@@ -681,13 +671,12 @@ async function handleResultsExport(req, res) {
     );
   }
 
-  const rows = [["id", "name", "answer", "comment", "deviceHash", "submittedAt"].map(csvCell).join(",")];
+  const rows = [["id", "name", "answer", "deviceHash", "submittedAt"].map(csvCell).join(",")];
   for (const record of records) {
     rows.push([
       record.id,
       record.name,
       record.answer,
-      typeof record.comment === "string" ? record.comment : "",
       record.deviceHash ?? "",
       record.submittedAt
     ].map(csvCell).join(","));
