@@ -6,6 +6,8 @@ import { createContext, runInContext } from "node:vm";
 import { rootDir } from "./helpers.mjs";
 
 const source = await readFile(resolve(rootDir, "public/app.js"), "utf8");
+const styles = await readFile(resolve(rootDir, "public/styles.css"), "utf8");
+const markup = await readFile(resolve(rootDir, "public/index.html"), "utf8");
 
 function createElement(extra = {}) {
   const classes = new Set();
@@ -58,7 +60,10 @@ async function createDom({
   token = "test-token",
   session = { ok: false },
   responses = [],
-  status = { submitted: false, answer: null }
+  status = { submitted: false, answer: null },
+  statusError = null,
+  deferStatus = false,
+  rememberedAnswer = null
 } = {}) {
   const form = createElement();
   const submitButton = createElement({ disabled: true });
@@ -93,9 +98,27 @@ async function createDom({
   const calls = [];
   const queued = [...responses];
   const statusQueue = [{ ...status }];
+  const storage = new Map();
+  const documentElement = createElement();
+  documentElement.classList.add("is-checking");
+  let releaseStatus;
+  const statusGate = deferStatus
+    ? new Promise((resolve) => {
+        releaseStatus = resolve;
+      })
+    : null;
   let VmError;
 
+  if (rememberedAnswer) storage.set("shams_survey_submitted", rememberedAnswer);
+
+  const localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: (key) => storage.delete(key)
+  };
+
   const document = {
+    documentElement,
     querySelector: (selector) => elements.get(selector) ?? null,
     querySelectorAll: (selector) => (selector === 'input[name="answer"]' ? radios : [])
   };
@@ -113,6 +136,8 @@ async function createDom({
     }
 
     if (url === "/api/survey/status") {
+      if (statusGate) await statusGate;
+      if (statusError) throw new VmError(statusError);
       const next = statusQueue.shift() ?? { submitted: false, answer: null };
       return { ok: true, status: 200, json: async () => next };
     }
@@ -126,13 +151,20 @@ async function createDom({
     };
   };
 
-  const context = createContext({ document, fetch: fetchStub, console });
+  const context = createContext({ document, fetch: fetchStub, localStorage, console });
   VmError = runInContext("Error", context);
   runInContext(source, context);
   await new Promise((done) => setImmediate(done));
 
   return {
     form,
+    documentElement,
+    localStorage: storage,
+    releaseStatus: async () => {
+      releaseStatus?.();
+      await new Promise((done) => setImmediate(done));
+      await new Promise((done) => setImmediate(done));
+    },
     submitButton,
     submitLabel,
     status: statusElement,
@@ -161,6 +193,7 @@ async function createDom({
 
 test("enables submission only after a name and response are provided", async () => {
   const dom = await createDom();
+  assert.equal(dom.documentElement.classList.contains("is-checking"), false);
   assert.equal(dom.submitButton.disabled, true);
 
   await dom.enterName("Ali Khan");
@@ -212,6 +245,39 @@ test("blocks submission until a name is entered", async () => {
   assert.match(dom.status.textContent, /enter your name/i);
   assert.equal(dom.status.classes.has("status--error"), true);
   assert.equal(dom.voterName.focused, true);
+});
+
+test("marks the survey as checking before scripts and hides the form while checking", () => {
+  assert.match(markup, /<html[^>]*class="is-checking"/);
+  assert.match(styles, /html\.is-checking \.survey-form\s*\{[^}]*visibility:\s*hidden/);
+});
+
+test("keeps the form visually gated until saved status says submitted", async () => {
+  const dom = await createDom({
+    deferStatus: true,
+    status: { submitted: true, answer: "yes" }
+  });
+
+  assert.equal(dom.documentElement.classList.contains("is-checking"), true);
+  assert.equal(dom.form.hidden, false);
+
+  await dom.releaseStatus();
+
+  assert.equal(dom.documentElement.classList.contains("is-checking"), false);
+  assert.equal(dom.form.hidden, true);
+  assert.equal(dom.success.hidden, false);
+});
+
+test("shows thank-you when status check fails after a remembered submission", async () => {
+  const dom = await createDom({
+    statusError: "Status down",
+    rememberedAnswer: "yes"
+  });
+
+  assert.equal(dom.documentElement.classList.contains("is-checking"), false);
+  assert.equal(dom.form.hidden, true);
+  assert.equal(dom.success.hidden, false);
+  assert.equal(dom.successText.textContent, "You have already submitted your response from this device.");
 });
 
 test("shows the already-submitted view on load", async () => {

@@ -15,6 +15,7 @@ const ALREADY_MESSAGE = "You have already submitted your response from this devi
 const THANKS_TITLE = "Thank you for participating!";
 const MAX_NAME_LENGTH = 80;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{32}$/;
+const SUBMITTED_FLAG = "shams_survey_submitted";
 
 let phase = "checking";
 let submittedAnswer = null;
@@ -27,6 +28,30 @@ function acceptToken(value) {
   if (typeof value !== "string" || !TOKEN_PATTERN.test(value)) return false;
   surveyToken = value;
   return true;
+}
+
+function finishChecking() {
+  document.documentElement?.classList.remove("is-checking");
+}
+
+function rememberSubmission(answer) {
+  try {
+    localStorage.setItem(SUBMITTED_FLAG, answer ?? "yes");
+  } catch {}
+}
+
+function clearRememberedSubmission() {
+  try {
+    localStorage.removeItem(SUBMITTED_FLAG);
+  } catch {}
+}
+
+function hasRememberedSubmission() {
+  try {
+    return Boolean(localStorage.getItem(SUBMITTED_FLAG));
+  } catch {
+    return false;
+  }
 }
 
 async function ensureSurveyToken() {
@@ -97,6 +122,8 @@ function showSuccess(title, message, answer) {
   if (successTitle) successTitle.textContent = title;
   if (successText) successText.textContent = message;
   setStatus("");
+  rememberSubmission(answer);
+  finishChecking();
   successTitle?.focus({ preventScroll: true });
 }
 
@@ -119,6 +146,10 @@ async function checkStatus() {
     });
 
     if (!response.ok) {
+      if (hasRememberedSubmission()) {
+        showAlreadySubmitted(null);
+        return;
+      }
       throw new Error("We could not check your submission status. Please reload the page.");
     }
 
@@ -129,10 +160,16 @@ async function checkStatus() {
       return;
     }
 
+    clearRememberedSubmission();
     phase = "idle";
     submitButton.disabled = !canSubmit();
     setStatus("");
+    finishChecking();
   } catch (error) {
+    if (hasRememberedSubmission()) {
+      showAlreadySubmitted(null);
+      return;
+    }
     phase = "idle";
     submitButton.disabled = !canSubmit();
     setStatus(
@@ -141,6 +178,7 @@ async function checkStatus() {
         : "We could not check your submission status. Please reload the page.",
       "error"
     );
+    finishChecking();
   }
 }
 

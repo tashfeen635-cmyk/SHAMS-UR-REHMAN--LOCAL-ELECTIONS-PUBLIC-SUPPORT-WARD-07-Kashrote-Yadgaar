@@ -28,6 +28,10 @@
   display: none !important;
 }
 
+html.is-checking .survey-form {
+  visibility: hidden;
+}
+
 html,
 body {
   width: 100%;

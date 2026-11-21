@@ -12,7 +12,7 @@ Anonymous public support survey for Shams-ur-Rehman, Ward 7 – Kashrote Yadgaar
 - Replaceable candidate photo and election symbol placeholders in `public/assets/`
 - Admin dashboard at `/admin` with totals, a per-respondent report, date range, and CSV/NDJSON downloads
 - Security headers, strict CSP, responsive layout, reduced-motion support
-- 25 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
+- 28 automated tests covering the API, device dedupe, validation, persistence, frontend logic, and Vercel error handling
 
 ## Quick start
 
