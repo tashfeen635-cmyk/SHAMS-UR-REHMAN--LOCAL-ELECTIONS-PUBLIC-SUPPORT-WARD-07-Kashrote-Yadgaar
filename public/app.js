@@ -17,7 +17,7 @@ const MAX_NAME_LENGTH = 80;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{32}$/;
 const SUBMITTED_FLAG = "shams_survey_submitted";
 
-let phase = "checking";
+let phase = "idle";
 let submittedAnswer = null;
 
 function selectedAnswer() {
@@ -28,10 +28,6 @@ function acceptToken(value) {
   if (typeof value !== "string" || !TOKEN_PATTERN.test(value)) return false;
   surveyToken = value;
   return true;
-}
-
-function finishChecking() {
-  document.documentElement?.classList.remove("is-checking");
 }
 
 function rememberSubmission(answer) {
@@ -123,7 +119,6 @@ function showSuccess(title, message, answer) {
   if (successText) successText.textContent = message;
   setStatus("");
   rememberSubmission(answer);
-  finishChecking();
   successTitle?.focus({ preventScroll: true });
 }
 
@@ -134,10 +129,6 @@ function showAlreadySubmitted(answer) {
 }
 
 async function checkStatus() {
-  phase = "checking";
-  submitButton.disabled = true;
-  setStatus("Checking your submission status…", "info");
-
   try {
     const response = await fetch("/api/survey/status", {
       credentials: "same-origin",
@@ -146,39 +137,36 @@ async function checkStatus() {
     });
 
     if (!response.ok) {
-      if (hasRememberedSubmission()) {
-        showAlreadySubmitted(null);
-        return;
-      }
-      throw new Error("We could not check your submission status. Please reload the page.");
+      if (hasRememberedSubmission()) showAlreadySubmitted(null);
+      return;
     }
 
     const data = await response.json();
     acceptToken(data.token);
     if (data.submitted) {
-      showAlreadySubmitted(data.answer);
+      if (phase === "idle") showAlreadySubmitted(data.answer);
       return;
     }
 
     clearRememberedSubmission();
-    phase = "idle";
-    submitButton.disabled = !canSubmit();
-    setStatus("");
-    finishChecking();
+    if (phase === "idle") {
+      submitButton.disabled = !canSubmit();
+      setStatus("");
+    }
   } catch (error) {
     if (hasRememberedSubmission()) {
       showAlreadySubmitted(null);
       return;
     }
-    phase = "idle";
-    submitButton.disabled = !canSubmit();
-    setStatus(
-      error instanceof Error
-        ? error.message
-        : "We could not check your submission status. Please reload the page.",
-      "error"
-    );
-    finishChecking();
+
+    if (phase === "idle" && !voterName?.value.trim() && !selectedAnswer()) {
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "We could not check your submission status. Please reload the page.",
+        "error"
+      );
+    }
   }
 }
 
@@ -265,4 +253,8 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-checkStatus();
+if (hasRememberedSubmission()) {
+  showAlreadySubmitted(null);
+} else {
+  checkStatus();
+}
