@@ -271,6 +271,18 @@ test("renders the campaign header, symbol card, full choices, and campaign foote
   assert.match(styles, /url\("\/assets\/hero-background\.jpg"\)/);
 });
 
+test("uses the deployed candidate photo as the Open Graph image", () => {
+  const imageUrl = "https://shams-ur-rehman-local-elections-pub.vercel.app/assets/candidate-photo.jpg";
+  assert.match(markup, /<meta property="og:type" content="website">/);
+  assert.match(
+    markup,
+    /<meta property="og:url" content="https:\/\/shams-ur-rehman-local-elections-pub\.vercel\.app\/">/
+  );
+  assert.ok(markup.includes(`<meta property="og:image" content="${imageUrl}">`));
+  assert.match(markup, /<meta property="og:image:type" content="image\/jpeg">/);
+  assert.match(markup, /<meta name="twitter:card" content="summary_large_image">/);
+});
+
 test("shows the form immediately while saved status is still loading", async () => {
   const dom = await createDom({
     deferStatus: true,
