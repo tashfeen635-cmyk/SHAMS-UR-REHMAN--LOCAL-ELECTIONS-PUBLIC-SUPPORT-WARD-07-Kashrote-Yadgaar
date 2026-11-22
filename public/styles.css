@@ -113,7 +113,7 @@ body {
   background:
     radial-gradient(circle at 12% 0%, rgba(22, 163, 74, 0.16), transparent 42%),
     linear-gradient(155deg, rgba(4, 69, 47, 0.32), rgba(1, 24, 17, 1)),
-    url("/assets/sky.jpg") center / cover no-repeat;
+    url("/assets/hero-background.jpg") center / cover no-repeat;
   overflow: hidden;
 }
 
@@ -1152,7 +1152,7 @@ body {
     background:
       radial-gradient(circle at 12% 0%, rgba(22, 163, 74, 0.16), transparent 42%),
       linear-gradient(155deg, rgba(4, 69, 47, 0.32), rgba(1, 24, 17, 1)),
-      url("/assets/sky.jpg") center / cover no-repeat;
+      url("/assets/hero-background.jpg") center / cover no-repeat;
   }
 
   .brand {

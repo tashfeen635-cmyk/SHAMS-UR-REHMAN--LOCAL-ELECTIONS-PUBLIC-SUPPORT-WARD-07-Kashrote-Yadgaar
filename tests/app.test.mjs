@@ -268,7 +268,7 @@ test("renders the campaign header, symbol card, full choices, and campaign foote
   assert.doesNotMatch(markup, /option__short/);
   assert.match(markup, /DEVELOPED BY TASHFEEN RIAZ/);
   assert.match(markup, /CONTACT \+923170885816/);
-  assert.match(styles, /url\("\/assets\/sky\.jpg"\)/);
+  assert.match(styles, /url\("\/assets\/hero-background\.jpg"\)/);
 });
 
 test("shows the form immediately while saved status is still loading", async () => {

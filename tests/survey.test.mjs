@@ -14,7 +14,7 @@ after(async () => {
 const delay = (ms) => new Promise((done) => setTimeout(done, ms));
 
 test("serves the candidate panel background asset", async () => {
-  const response = await fetch(`${origin}/assets/sky.jpg`);
+  const response = await fetch(`${origin}/assets/hero-background.jpg`);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type"), /image\/jpeg/);
 });

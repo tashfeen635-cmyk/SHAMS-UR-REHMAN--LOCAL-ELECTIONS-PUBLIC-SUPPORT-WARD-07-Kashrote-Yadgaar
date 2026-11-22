@@ -80,7 +80,7 @@ const staticAssets = new Map([
   ["/assets/candidate-photo.jpg", ["assets/candidate-photo.jpg", "image/jpeg"]],
   ["/assets/election-symbol.svg", ["assets/election-symbol.svg", "image/svg+xml"]],
   ["/assets/election-symbol.jpg", ["assets/election-symbol.jpg", "image/jpeg"]],
-  ["/assets/sky.jpg", ["assets/sky.jpg", "image/jpeg"]],
+  ["/assets/hero-background.jpg", ["assets/hero-background.jpg", "image/jpeg"]],
   ["/admin.css", ["admin.css", "text/css; charset=utf-8"]],
   ["/admin.js", ["admin.js", "text/javascript; charset=utf-8"]]
 ]);
