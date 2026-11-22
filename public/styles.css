@@ -109,10 +109,11 @@ body {
   gap: clamp(14px, 2.2vh, 28px);
   padding: clamp(28px, 3vw, 46px);
   color: #ffffff;
+  text-shadow: 0 1px 10px rgba(0, 20, 12, 0.55);
   background:
-    radial-gradient(circle at 10% 6%, rgba(37, 200, 106, 0.2), transparent 38%),
-    radial-gradient(circle at 96% 94%, rgba(217, 45, 36, 0.16), transparent 34%),
-    linear-gradient(155deg, var(--green-900), var(--green-950));
+    radial-gradient(circle at 12% 0%, rgba(22, 163, 74, 0.16), transparent 42%),
+    linear-gradient(155deg, rgba(4, 69, 47, 0.32), rgba(1, 24, 17, 1)),
+    url("/assets/sky.jpg") center / cover no-repeat;
   overflow: hidden;
 }
 
@@ -383,6 +384,7 @@ body {
 }
 
 .survey-panel {
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -739,6 +741,36 @@ body {
 .campaign-footer__slogan,
 .campaign-footer__disclaimer {
   margin: 0;
+}
+
+.developer-credit {
+  position: absolute;
+  right: clamp(14px, 3vw, 44px);
+  bottom: 4px;
+  left: clamp(14px, 3vw, 44px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.developer-credit p {
+  margin: 0;
+}
+
+.developer-credit strong {
+  color: var(--green-800);
+  font-size: inherit;
+  letter-spacing: 0.06em;
 }
 
 .credit {
@@ -1119,7 +1151,8 @@ body {
     padding: 12px 14px 10px;
     background:
       radial-gradient(circle at 12% 0%, rgba(22, 163, 74, 0.16), transparent 42%),
-      linear-gradient(155deg, var(--green-900), var(--green-950));
+      linear-gradient(155deg, rgba(4, 69, 47, 0.32), rgba(1, 24, 17, 1)),
+      url("/assets/sky.jpg") center / cover no-repeat;
   }
 
   .brand {
@@ -1373,6 +1406,14 @@ body {
     color: rgba(255, 255, 255, 0.72);
     font-size: 8.5px;
     line-height: 1.35;
+  }
+
+  .developer-credit {
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .developer-credit strong {
+    color: var(--yellow);
   }
 }
 

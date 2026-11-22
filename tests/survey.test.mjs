@@ -13,6 +13,12 @@ after(async () => {
 
 const delay = (ms) => new Promise((done) => setTimeout(done, ms));
 
+test("serves the candidate panel background asset", async () => {
+  const response = await fetch(`${origin}/assets/sky.jpg`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /image\/jpeg/);
+});
+
 async function readRecords() {
   const content = await readFile(dataFile, "utf8");
   return content.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));

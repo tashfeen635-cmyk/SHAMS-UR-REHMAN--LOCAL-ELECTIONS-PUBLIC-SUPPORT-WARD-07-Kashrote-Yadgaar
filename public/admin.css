@@ -201,18 +201,6 @@ button {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.brand__mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--yellow);
-  color: var(--dark-green);
-  font-weight: 900;
-}
-
 .brand strong,
 .brand span {
   display: block;

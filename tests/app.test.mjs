@@ -266,7 +266,9 @@ test("renders the campaign header, symbol card, full choices, and campaign foote
     /Participation is voluntary\. Your response is an informal opinion and does not constitute an official election vote\./
   );
   assert.doesNotMatch(markup, /option__short/);
-  assert.doesNotMatch(markup, /developed by/);
+  assert.match(markup, /DEVELOPED BY TASHFEEN RIAZ/);
+  assert.match(markup, /CONTACT \+923170885816/);
+  assert.match(styles, /url\("\/assets\/sky\.jpg"\)/);
 });
 
 test("shows the form immediately while saved status is still loading", async () => {
